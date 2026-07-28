@@ -1,0 +1,263 @@
+{
+  "$schema": "video-template-v1",
+  "name": "TikTok",
+  "description": "High-energy TikTok template with neon text, animated captions, and dynamic motion effects",
+  "platform": "tiktok",
+  "crop": {
+    "aspect_ratio": "9:16",
+    "width": 1080,
+    "height": 1920,
+    "anchor": "center",
+    "padding": 0
+  },
+  "duration": {
+    "max_seconds": 180,
+    "min_seconds": 1,
+    "default_intro": 0.3,
+    "default_outro": 0.5
+  },
+  "export": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "codec": "H264",
+    "bitrate": "8Mbps",
+    "audio_codec": "AAC",
+    "audio_bitrate": "192kHz",
+    "container": "mp4",
+    "pixel_format": "yuv420p",
+    "profile": "high",
+    "level": "4.1",
+    "keyframe_interval": 2,
+    "encoding_preset": "medium",
+    "two_pass": false
+  },
+  "transitions": {
+    "defaults": ["glitch", "flash", "whip"],
+    "available": ["glitch", "flash", "whip", "spin", "zoom_in", "shake", "strobe"],
+    "duration": {
+      "default": 0.3,
+      "min": 0.1,
+      "max": 0.6
+    },
+    "easing": "ease_out",
+    "between_clips": true,
+    "at_intro": "flash",
+    "at_outro": "glitch",
+    "random_per_clip": false,
+    "sequence_pattern": ["glitch", "whip", "flash"]
+  },
+  "text": {
+    "style": "bold_neon",
+    "animation": {
+      "entrance": "pop_bounce",
+      "exit": "glitch_out",
+      "duration": 0.3,
+      "type": "pop_animation"
+    },
+    "neon": {
+      "enabled": true,
+      "glow_color": "#FF00FF",
+      "glow_intensity": 0.8,
+      "glow_spread": 12,
+      "pulse_speed": 1.5
+    },
+    "alignment": "center",
+    "default_font": "Impact",
+    "fallback_font": "Arial Black",
+    "sizes": {
+      "title": 88,
+      "subtitle": 56,
+      "body": 44,
+      "caption": 34,
+      "shout": 96
+    },
+    "colors": {
+      "primary": "#FFFFFF",
+      "secondary": "#FF00FF",
+      "accent": "#00FFFF",
+      "neon_glow": "#FF00FF",
+      "outline": "#000000",
+      "shadow": "#FF00FF80"
+    },
+    "outline": {
+      "enabled": true,
+      "width": 5,
+      "color": "#000000"
+    },
+    "shadow": {
+      "enabled": true,
+      "offset_x": 0,
+      "offset_y": 0,
+      "blur": 16,
+      "color": "#FF00FF80"
+    },
+    "position": {
+      "x": "center",
+      "y": "center",
+      "margin_bottom": 280
+    },
+    "safe_zone_margin": 160
+  },
+  "color_grading": {
+    "preset": "vivid",
+    "lut": "tiktok_vivid.cube",
+    "adjustments": {
+      "brightness": 0.08,
+      "contrast": 1.3,
+      "saturation": 1.4,
+      "highlights": 0.1,
+      "shadows": 0.1,
+      "temperature": 0,
+      "tint": 0,
+      "vibrance": 1.4,
+      "clarity": 1.2
+    },
+    "curves": {
+      "enabled": true,
+      "rgb": "high_contrast_s_curve"
+    },
+    "vignette": {
+      "enabled": false
+    },
+    "film_grain": {
+      "enabled": false
+    },
+    "selective_color": {
+      "enabled": true,
+      "target": "reds",
+      "saturation_boost": 1.3
+    }
+  },
+  "motion": {
+    "dynamic_zooms": {
+      "enabled": true,
+      "types": ["quick_zoom_in", "quick_zoom_out", "snap_zoom"],
+      "intensity": 0.15,
+      "duration": 0.4,
+      "trigger": "on_beat",
+      "easing": "ease_out"
+    },
+    "camera_shake": {
+      "enabled": true,
+      "intensity": 0.02,
+      "frequency": 24,
+      "decay": 0.9,
+      "trigger": "on_transition"
+    },
+    "parallax": {
+      "enabled": false
+    },
+    "speed_ramping": {
+      "enabled": true,
+      "presets": ["ramp_up_down", "freeze_frame"],
+      "trigger": "manual"
+    },
+    "ken_burns": {
+      "enabled": false
+    }
+  },
+  "audio": {
+    "music": {
+      "volume": 0.45,
+      "fade_in": 0.2,
+      "fade_out": 1.0,
+      "ducking": {
+        "enabled": true,
+        "threshold": -16,
+        "ratio": 8,
+        "attack": 0.03,
+        "release": 0.2
+      },
+      "loop": true,
+      "beat_sync": true,
+      "beat_sync_sensitivity": 1.0,
+      "beat_sync_visual": true
+    },
+    "voiceover": {
+      "volume": 1.0,
+      "normalize": true,
+      "target_loudness": -14,
+      "noise_reduction": true
+    },
+    "sfx": {
+      "volume": 0.7,
+      "transition_sounds": true,
+      "transition_sound": "glitch_digit",
+      "impact_sounds": true
+    },
+    "master": {
+      "loudness": -14,
+      "true_peak": -1.0,
+      "limiter": true
+    }
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "animated_captions",
+    "animated_captions": {
+      "enabled": true,
+      "word_highlight_color": "#FF00FF",
+      "default_color": "#FFFFFF",
+      "background_color": "#000000CC",
+      "font": "Impact",
+      "size": 44,
+      "animation_per_word": "pop_scale",
+      "animation_per_line": "slide_up",
+      "position": "center_bottom",
+      "margin_bottom": 320,
+      "max_width": 940,
+      "word_padding": 6,
+      "line_spacing": 1.5,
+      "karaoke_mode": false
+    },
+    "source": "auto_generate",
+    "language": "en",
+    "word_timestamps": true,
+    "max_words_per_line": 4,
+    "max_lines": 2,
+    "background": {
+      "enabled": true,
+      "style": "rounded_box",
+      "color": "#000000CC",
+      "padding": 14,
+      "border_radius": 10
+    }
+  },
+  "effects": {
+    "intro": {
+      "type": "flash_in",
+      "duration": 0.3
+    },
+    "outro": {
+      "type": "glitch_out",
+      "duration": 0.5
+    },
+    "speed_ramping": {
+      "enabled": true,
+      "trigger_points": []
+    },
+    "chromatic_aberration": {
+      "enabled": true,
+      "intensity": 0.3,
+      "trigger": "on_transition"
+    },
+    "vhs_effect": {
+      "enabled": false
+    },
+    "rgb_split": {
+      "enabled": true,
+      "intensity": 0.2,
+      "trigger": "on_beat"
+    }
+  },
+  "watermark": {
+    "enabled": false
+  },
+  "metadata": {
+    "title": "TikTok Template",
+    "version": "1.0.0",
+    "author": "Video Editor Pipeline",
+    "tags": ["tiktok", "short_form", "social", "neon", "dynamic"]
+  }
+}

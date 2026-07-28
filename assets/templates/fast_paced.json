@@ -1,0 +1,368 @@
+{
+  "$schema": "video-template-v1",
+  "name": "Fast Paced",
+  "description": "High-energy fast-paced template optimized for TikTok with beat-synced editing, glitch transitions, and dynamic motion",
+  "platform": "tiktok",
+  "crop": {
+    "aspect_ratio": "9:16",
+    "width": 1080,
+    "height": 1920,
+    "anchor": "center",
+    "padding": 0
+  },
+  "duration": {
+    "max_seconds": 180,
+    "min_seconds": 5,
+    "default_intro": 0.2,
+    "default_outro": 0.5
+  },
+  "export": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 60,
+    "codec": "H264",
+    "bitrate": "12Mbps",
+    "audio_codec": "AAC",
+    "audio_bitrate": "256kHz",
+    "container": "mp4",
+    "pixel_format": "yuv420p",
+    "profile": "high",
+    "level": "5.2",
+    "keyframe_interval": 1,
+    "encoding_preset": "fast",
+    "two_pass": false
+  },
+  "transitions": {
+    "defaults": ["glitch", "flash", "whip"],
+    "available": ["glitch", "flash", "whip", "strobe", "shake_cut", "jump_cut", "inverted_flash"],
+    "duration": {
+      "default": 0.3,
+      "min": 0.1,
+      "max": 0.3
+    },
+    "easing": "ease_out",
+    "between_clips": true,
+    "at_intro": "flash",
+    "at_outro": "glitch",
+    "force_short_duration": true,
+    "glitch": {
+      "intensity": 0.8,
+      "rgb_split": 0.6,
+      "block_displacement": true,
+      "scanlines": 0.3,
+      "duration_frames": 9
+    },
+    "flash": {
+      "color": "#FFFFFF",
+      "intensity": 1.0,
+      "duration_frames": 3
+    },
+    "whip": {
+      "direction": "random",
+      "blur_amount": 30,
+      "duration_frames": 6
+    }
+  },
+  "text": {
+    "style": "pop",
+    "animation": {
+      "entrance": "bounce_pop",
+      "exit": "snap_out",
+      "duration": 0.2,
+      "type": "bounce_animation",
+      "bounce_count": 2,
+      "bounce_decay": 0.5,
+      "overshoot": 1.2
+    },
+    "pop_animation": {
+      "enabled": true,
+      "scale_from": 0.0,
+      "scale_to": 1.3,
+      "settle_to": 1.0,
+      "elasticity": 0.6,
+      "damping": 0.4
+    },
+    "alignment": "center",
+    "default_font": "Bebas Neue",
+    "fallback_font": "Impact",
+    "sizes": {
+      "title": 96,
+      "subtitle": 64,
+      "body": 48,
+      "caption": 36,
+      "shout": 120,
+      "countdown": 160
+    },
+    "colors": {
+      "primary": "#FFFFFF",
+      "secondary": "#FF3366",
+      "accent": "#00FF88",
+      "highlight": "#FFD700",
+      "outline": "#000000",
+      "shadow": "#FF336680"
+    },
+    "outline": {
+      "enabled": true,
+      "width": 6,
+      "color": "#000000"
+    },
+    "shadow": {
+      "enabled": true,
+      "offset_x": 0,
+      "offset_y": 0,
+      "blur": 20,
+      "color": "#FF336680"
+    },
+    "position": {
+      "x": "center",
+      "y": "center",
+      "margin_bottom": 300
+    },
+    "safe_zone_margin": 150,
+    "on_beat_text": {
+      "enabled": true,
+      "scale_on_beat": 1.1,
+      "color_flash": true,
+      "flash_color": "#FF3366",
+      "flash_duration_frames": 4
+    }
+  },
+  "color_grading": {
+    "preset": "high_contrast_vivid",
+    "lut": "fast_paced_high_contrast.cube",
+    "adjustments": {
+      "brightness": 0.05,
+      "contrast": 1.45,
+      "saturation": 1.5,
+      "highlights": 0.15,
+      "shadows": 0.05,
+      "temperature": 0,
+      "tint": 0,
+      "vibrance": 1.5,
+      "clarity": 1.35
+    },
+    "curves": {
+      "enabled": true,
+      "rgb": "aggressive_s_curve",
+      "luminance": "crush_blacks_lift_highs"
+    },
+    "color_wheels": {
+      "enabled": false
+    },
+    "vignette": {
+      "enabled": true,
+      "strength": 0.2,
+      "size": 0.7,
+      "feather": 0.8
+    },
+    "film_grain": {
+      "enabled": false
+    },
+    "halation": {
+      "enabled": false
+    },
+    "selective_color": {
+      "enabled": true,
+      "targets": [
+        { "color": "reds", "saturation_boost": 1.4 },
+        { "color": "blues", "saturation_boost": 1.2 }
+      ]
+    },
+    "color_pulse": {
+      "enabled": true,
+      "intensity": 0.3,
+      "speed": "fast",
+      "trigger": "on_beat"
+    }
+  },
+  "motion": {
+    "dynamic_zooms": {
+      "enabled": true,
+      "types": ["quick_zoom_in", "quick_zoom_out", "snap_zoom", "whip_zoom"],
+      "intensity": 0.2,
+      "duration": 0.3,
+      "trigger": "on_beat",
+      "easing": "ease_out",
+      "zoom_range": [1.0, 1.25],
+      "snap_frames": 2
+    },
+    "camera_shake": {
+      "enabled": true,
+      "intensity": 0.04,
+      "frequency": 30,
+      "decay": 0.85,
+      "trigger": "on_transition",
+      "types": ["horizontal", "vertical", "diagonal"],
+      "random_direction": true
+    },
+    "speed_ramping": {
+      "enabled": true,
+      "presets": ["ramp_up_down", "freeze_frame", "speed_burst", "slow_fast_slow"],
+      "trigger": "on_beat",
+      "default_speed": 1.0,
+      "min_speed": 0.25,
+      "max_speed": 4.0,
+      "transition_frames": 3
+    },
+    "parallax": {
+      "enabled": false
+    },
+    "ken_burns": {
+      "enabled": false
+    },
+    "micro_cuts": {
+      "enabled": true,
+      "interval_beats": 2,
+      "variation": 0.1
+    }
+  },
+  "audio": {
+    "music": {
+      "volume": 0.65,
+      "fade_in": 0.1,
+      "fade_out": 0.5,
+      "ducking": {
+        "enabled": true,
+        "threshold": -14,
+        "ratio": 10,
+        "attack": 0.02,
+        "release": 0.1
+      },
+      "loop": true,
+      "beat_sync": true,
+      "beat_sync_sensitivity": 1.0,
+      "beat_sync_visual": true,
+      "bpm_detection": {
+        "enabled": true,
+        "algorithm": "energy_based",
+        "min_bpm": 100,
+        "max_bpm": 180
+      },
+      "cut_on_beat": {
+        "enabled": true,
+        "beat_types": ["kick", "snare", "hi_hat"],
+        "vary_cut_type": true
+      }
+    },
+    "voiceover": {
+      "volume": 1.0,
+      "normalize": true,
+      "target_loudness": -14,
+      "noise_reduction": true,
+      "compression": {
+        "enabled": true,
+        "threshold": -16,
+        "ratio": 6,
+        "attack": 0.01,
+        "release": 0.1
+      }
+    },
+    "sfx": {
+      "volume": 0.8,
+      "transition_sounds": true,
+      "transition_sound": "digital_glitch",
+      "impact_sounds": true,
+      "impact_sound": "bass_hit",
+      "riser_sfx": true,
+      "riser_sound": "synth_riser"
+    },
+    "master": {
+      "loudness": -12,
+      "true_peak": -0.5,
+      "limiter": true,
+      "limiter_release": 0.05,
+      "stereo_width": 1.0
+    }
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "animated_captions",
+    "animated_captions": {
+      "enabled": true,
+      "word_highlight_color": "#FF3366",
+      "default_color": "#FFFFFF",
+      "background_color": "#000000CC",
+      "font": "Bebas Neue",
+      "size": 48,
+      "animation_per_word": "bounce_pop",
+      "animation_per_line": "snap_in",
+      "position": "center_bottom",
+      "margin_bottom": 350,
+      "max_width": 960,
+      "word_padding": 8,
+      "line_spacing": 1.3,
+      "sync_style": "aggressive",
+      "word_enter_scale": 1.3,
+      "word_settle_scale": 1.0
+    },
+    "source": "auto_generate",
+    "language": "en",
+    "word_timestamps": true,
+    "max_words_per_line": 3,
+    "max_lines": 2,
+    "cut_subtitle_on_beat": true,
+    "background": {
+      "enabled": true,
+      "style": "rounded_box",
+      "color": "#000000CC",
+      "padding": 16,
+      "border_radius": 8
+    }
+  },
+  "effects": {
+    "intro": {
+      "type": "flash_in",
+      "duration": 0.2
+    },
+    "outro": {
+      "type": "glitch_out",
+      "duration": 0.5
+    },
+    "speed_ramping": {
+      "enabled": true
+    },
+    "chromatic_aberration": {
+      "enabled": true,
+      "intensity": 0.5,
+      "trigger": "on_transition",
+      "duration_frames": 4
+    },
+    "rgb_split": {
+      "enabled": true,
+      "intensity": 0.4,
+      "trigger": "on_beat",
+      "direction": "horizontal"
+    },
+    "glitch_overlay": {
+      "enabled": true,
+      "intensity": 0.3,
+      "trigger": "on_beat",
+      "types": ["block_displacement", "scanlines", "color_shift"]
+    },
+    "motion_blur": {
+      "enabled": true,
+      "shutter_angle": 180,
+      "trigger": "on_fast_motion"
+    },
+    "strobe": {
+      "enabled": false,
+      "intensity": 0.0,
+      "trigger": "manual"
+    },
+    "shake_effect": {
+      "enabled": true,
+      "intensity": 0.03,
+      "trigger": "on_transition",
+      "duration_frames": 6
+    }
+  },
+  "watermark": {
+    "enabled": false
+  },
+  "metadata": {
+    "title": "Fast Paced Template",
+    "version": "1.0.0",
+    "author": "Video Editor Pipeline",
+    "tags": ["fast_paced", "tiktok", "beat_sync", "glitch", "high_energy", "dynamic"]
+  }
+}

@@ -1,0 +1,259 @@
+{
+  "$schema": "video-template-v1",
+  "name": "YouTube Short",
+  "description": "Optimized template for YouTube Shorts with subscribe CTA and end screen outro",
+  "platform": "youtube_short",
+  "crop": {
+    "aspect_ratio": "9:16",
+    "width": 1080,
+    "height": 1920,
+    "anchor": "center",
+    "padding": 0
+  },
+  "duration": {
+    "max_seconds": 60,
+    "min_seconds": 3,
+    "default_intro": 0.5,
+    "default_outro": 2.0
+  },
+  "export": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "codec": "H264",
+    "bitrate": "10Mbps",
+    "audio_codec": "AAC",
+    "audio_bitrate": "256kHz",
+    "container": "mp4",
+    "pixel_format": "yuv420p",
+    "profile": "high",
+    "level": "4.2",
+    "keyframe_interval": 2,
+    "encoding_preset": "slow",
+    "two_pass": true
+  },
+  "transitions": {
+    "defaults": ["zoom", "whip"],
+    "available": ["zoom", "whip", "spin", "blur", "slide_left"],
+    "duration": {
+      "default": 0.4,
+      "min": 0.2,
+      "max": 0.8
+    },
+    "easing": "ease_in_out",
+    "between_clips": true,
+    "at_intro": "zoom",
+    "at_outro": "fade"
+  },
+  "text": {
+    "style": "clean",
+    "size_modifier": "large",
+    "alignment": "center",
+    "default_font": "Roboto Medium",
+    "fallback_font": "Helvetica Neue",
+    "sizes": {
+      "title": 80,
+      "subtitle": 52,
+      "body": 40,
+      "caption": 32,
+      "cta": 56
+    },
+    "colors": {
+      "primary": "#FFFFFF",
+      "secondary": "#FF0000",
+      "accent": "#FF0000",
+      "outline": "#000000",
+      "shadow": "#00000066"
+    },
+    "outline": {
+      "enabled": true,
+      "width": 4,
+      "color": "#000000"
+    },
+    "shadow": {
+      "enabled": true,
+      "offset_x": 0,
+      "offset_y": 3,
+      "blur": 6,
+      "color": "#00000066"
+    },
+    "animation": {
+      "entrance": "slide_up",
+      "exit": "slide_down",
+      "duration": 0.35
+    },
+    "position": {
+      "x": "center",
+      "y": "center",
+      "margin_bottom": 250
+    },
+    "safe_zone_margin": 180
+  },
+  "color_grading": {
+    "preset": "cinematic",
+    "lut": "youtube_cinematic.cube",
+    "adjustments": {
+      "brightness": 0.0,
+      "contrast": 1.2,
+      "saturation": 1.1,
+      "highlights": 0.05,
+      "shadows": -0.05,
+      "temperature": 0.1,
+      "tint": 0,
+      "vibrance": 1.1,
+      "clarity": 1.15
+    },
+    "curves": {
+      "enabled": true,
+      "rgb": "cinematic_lift_gamma_gain"
+    },
+    "vignette": {
+      "enabled": true,
+      "strength": 0.3,
+      "size": 0.8
+    },
+    "film_grain": {
+      "enabled": false
+    }
+  },
+  "audio": {
+    "music": {
+      "volume": 0.35,
+      "fade_in": 0.5,
+      "fade_out": 2.0,
+      "ducking": {
+        "enabled": true,
+        "threshold": -18,
+        "ratio": 6,
+        "attack": 0.05,
+        "release": 0.3
+      },
+      "loop": true,
+      "beat_sync": true,
+      "beat_sync_sensitivity": 0.8
+    },
+    "voiceover": {
+      "volume": 1.0,
+      "normalize": true,
+      "target_loudness": -14
+    },
+    "sfx": {
+      "volume": 0.5,
+      "transition_sounds": true,
+      "transition_sound": "whoosh_soft"
+    },
+    "master": {
+      "loudness": -14,
+      "true_peak": -1.0,
+      "limiter": true
+    }
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "word_highlight",
+    "word_highlight": {
+      "enabled": true,
+      "highlight_color": "#FF0000",
+      "default_color": "#FFFFFF",
+      "background_color": "#00000099",
+      "font": "Roboto Bold",
+      "size": 42,
+      "animation": "highlight_slide",
+      "position": "center_bottom",
+      "margin_bottom": 350,
+      "max_width": 920,
+      "word_padding": 6,
+      "line_spacing": 1.4
+    },
+    "source": "auto_generate",
+    "language": "en",
+    "word_timestamps": true,
+    "max_words_per_line": 5,
+    "max_lines": 2,
+    "background": {
+      "enabled": true,
+      "style": "pill",
+      "color": "#00000099",
+      "padding": 16,
+      "border_radius": 20
+    }
+  },
+  "overlays": {
+    "subscribe_cta": {
+      "enabled": true,
+      "type": "subscribe_button",
+      "position": "bottom_center",
+      "margin_bottom": 120,
+      "size": "medium",
+      "style": "youtube_red",
+      "animation": {
+        "entrance": "pop_scale",
+        "loop": "pulse",
+        "exit": "fade_out"
+      },
+      "show_at_second": 3,
+      "duration": 4,
+      "include_channel_icon": true,
+      "include_bell_icon": true
+    },
+    "end_screen": {
+      "enabled": true,
+      "type": "outro",
+      "duration": 3.0,
+      "background": {
+        "type": "blur",
+        "strength": 0.6,
+        "darken": 0.4
+      },
+      "elements": [
+        {
+          "type": "subscribe_circle",
+          "position": "center",
+          "size": "large"
+        },
+        {
+          "type": "suggested_video",
+          "position": "left",
+          "size": "medium"
+        },
+        {
+          "type": "playlist",
+          "position": "right",
+          "size": "medium"
+        }
+      ],
+      "text": {
+        "thanks": "Thanks for watching!",
+        "font": "Roboto Bold",
+        "size": 48,
+        "color": "#FFFFFF",
+        "position": "top_center"
+      }
+    }
+  },
+  "effects": {
+    "intro": {
+      "type": "zoom_in",
+      "duration": 0.5
+    },
+    "outro": {
+      "type": "fade_to_black",
+      "duration": 1.5
+    },
+    "speed_ramping": {
+      "enabled": false
+    },
+    "chromatic_aberration": {
+      "enabled": false
+    }
+  },
+  "watermark": {
+    "enabled": false
+  },
+  "metadata": {
+    "title": "YouTube Short Template",
+    "version": "1.0.0",
+    "author": "Video Editor Pipeline",
+    "tags": ["youtube", "shorts", "short_form", "social", "cta"]
+  }
+}

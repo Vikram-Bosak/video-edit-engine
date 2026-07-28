@@ -1,0 +1,384 @@
+{
+  "$schema": "video-template-v1",
+  "name": "Cinematic",
+  "description": "High-end cinematic template with teal-orange grading, film grain, and professional transitions for all platforms",
+  "platform": "all",
+  "crop": {
+    "aspect_ratio": "varies",
+    "presets": {
+      "16:9": { "width": 1920, "height": 1080 },
+      "2.35:1": { "width": 1920, "height": 816 },
+      "9:16": { "width": 1080, "height": 1920 },
+      "1:1": { "width": 1080, "height": 1080 },
+      "4:5": { "width": 1080, "height": 1350 }
+    },
+    "default": "16:9",
+    "letterbox": {
+      "enabled": true,
+      "color": "#000000",
+      "bars_for_vertical": true
+    }
+  },
+  "duration": {
+    "max_seconds": 600,
+    "min_seconds": 5,
+    "default_intro": 2.0,
+    "default_outro": 3.0
+  },
+  "export": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 24,
+    "codec": "H265",
+    "bitrate": "20Mbps",
+    "audio_codec": "AAC",
+    "audio_bitrate": "320kHz",
+    "container": "mp4",
+    "pixel_format": "yuv420p10le",
+    "profile": "main10",
+    "level": "5.1",
+    "keyframe_interval": 2,
+    "encoding_preset": "slow",
+    "two_pass": true,
+    "hdr": {
+      "enabled": false,
+      "color_space": "bt2020",
+      "transfer_function": "pq"
+    },
+    "alternative_exports": {
+      "social_vertical": {
+        "width": 1080,
+        "height": 1920,
+        "codec": "H264",
+        "bitrate": "10Mbps"
+      },
+      "social_square": {
+        "width": 1080,
+        "height": 1080,
+        "codec": "H264",
+        "bitrate": "8Mbps"
+      }
+    }
+  },
+  "transitions": {
+    "defaults": ["film_burn", "light_leak", "mask_reveal"],
+    "available": [
+      "film_burn",
+      "light_leak",
+      "mask_reveal",
+      "film_dissolve",
+      "dip_to_black",
+      "dip_to_white",
+      "blur_cross",
+      "glow_dissolve",
+      "film_strip"
+    ],
+    "duration": {
+      "default": 1.0,
+      "min": 0.5,
+      "max": 2.0
+    },
+    "easing": "ease_in_out",
+    "between_clips": true,
+    "at_intro": "dip_to_black",
+    "at_outro": "dip_to_black",
+    "film_burn": {
+      "intensity": 0.7,
+      "warmth": 0.6,
+      "overlay_blend": "screen"
+    },
+    "light_leak": {
+      "intensity": 0.5,
+      "color_temperature": "warm",
+      "position": "edge"
+    },
+    "mask_reveal": {
+      "shape": "gradient",
+      "direction": "left_to_right",
+      "softness": 0.3
+    }
+  },
+  "text": {
+    "style": "cinematic",
+    "design": "professional",
+    "alignment": "center",
+    "default_font": "Bebas Neue",
+    "fallback_font": "Impact",
+    "secondary_font": "Lato Light",
+    "sizes": {
+      "title": 96,
+      "subtitle": 56,
+      "body": 36,
+      "caption": 28,
+      "credit": 22,
+      "lower_third": 42
+    },
+    "colors": {
+      "primary": "#FFFFFF",
+      "secondary": "#E8D5B7",
+      "accent": "#C9A96E",
+      "outline": "none",
+      "shadow": "#00000099"
+    },
+    "outline": {
+      "enabled": false
+    },
+    "shadow": {
+      "enabled": true,
+      "offset_x": 0,
+      "offset_y": 4,
+      "blur": 12,
+      "color": "#00000099"
+    },
+    "letter_spacing": 6,
+    "line_height": 1.5,
+    "uppercase": true,
+    "animation": {
+      "entrance": "fade_up_slow",
+      "exit": "fade_out_slow",
+      "duration": 0.8,
+      "title_reveal": "typewriter",
+      "subtitle_reveal": "fade_in_delayed"
+    },
+    "position": {
+      "x": "center",
+      "y": "center",
+      "margin_bottom": 200
+    },
+    "lower_third": {
+      "enabled": false,
+      "position": "bottom_left",
+      "style": "line_accent",
+      "animation": "slide_in_left"
+    },
+    "safe_zone_margin": 120,
+    "credits": {
+      "enabled": true,
+      "position": "bottom_center",
+      "font": "Lato Light",
+      "size": 20,
+      "spacing": 4,
+      "scroll": false
+    }
+  },
+  "color_grading": {
+    "preset": "teal_orange",
+    "lut": "cinematic_teal_orange.cube",
+    "adjustments": {
+      "brightness": -0.02,
+      "contrast": 1.25,
+      "saturation": 0.85,
+      "highlights": -0.05,
+      "shadows": -0.1,
+      "temperature": 0,
+      "tint": 0,
+      "vibrance": 0.95,
+      "clarity": 1.2
+    },
+    "curves": {
+      "enabled": true,
+      "rgb": "cinematic_s_curve",
+      "red": "orange_push_shadows",
+      "green": "subtle_desat_highlights",
+      "blue": "teal_lift_shadows"
+    },
+    "color_wheels": {
+      "enabled": true,
+      "shadows": { "hue": 190, "saturation": 0.35 },
+      "midtones": { "hue": 30, "saturation": 0.15 },
+      "highlights": { "hue": 45, "saturation": 0.1 }
+    },
+    "split_toning": {
+      "enabled": true,
+      "shadow_hue": 190,
+      "shadow_saturation": 0.3,
+      "highlight_hue": 40,
+      "highlight_saturation": 0.2,
+      "balance": 0
+    },
+    "vignette": {
+      "enabled": true,
+      "strength": 0.4,
+      "size": 0.65,
+      "feather": 0.95,
+      "color": "#000000"
+    },
+    "film_grain": {
+      "enabled": true,
+      "amount": 0.12,
+      "size": 0.4,
+      "softness": 0.5,
+      "type": "kodak_5219",
+      "monochromatic": false
+    },
+    "halation": {
+      "enabled": true,
+      "intensity": 0.2,
+      "threshold": 0.75,
+      "softness": 0.8
+    },
+    "bloom": {
+      "enabled": true,
+      "intensity": 0.1,
+      "threshold": 0.8,
+      "softness": 0.6
+    }
+  },
+  "motion": {
+    "ken_burns": {
+      "enabled": true,
+      "types": ["slow_zoom_in", "slow_zoom_out", "slow_pan_right", "slow_pan_left"],
+      "intensity": 0.05,
+      "duration": "full_clip",
+      "easing": "ease_in_out",
+      "random_start_point": true
+    },
+    "slow_zoom": {
+      "enabled": true,
+      "range": [1.0, 1.08],
+      "duration": "full_clip",
+      "easing": "ease_in_out"
+    },
+    "dynamic_zooms": {
+      "enabled": false
+    },
+    "camera_shake": {
+      "enabled": false
+    },
+    "parallax": {
+      "enabled": false
+    },
+    "speed_ramping": {
+      "enabled": true,
+      "presets": ["slow_motion_reveal", "dramatic_slow"],
+      "trigger": "manual",
+      "default_speed": 1.0,
+      "slow_motion_speed": 0.5
+    }
+  },
+  "audio": {
+    "music": {
+      "volume": 0.35,
+      "fade_in": 2.0,
+      "fade_out": 3.0,
+      "ducking": {
+        "enabled": true,
+        "threshold": -24,
+        "ratio": 4,
+        "attack": 0.3,
+        "release": 1.0
+      },
+      "loop": false,
+      "beat_sync": false,
+      "eq": "cinematic_wide"
+    },
+    "voiceover": {
+      "volume": 1.0,
+      "normalize": true,
+      "target_loudness": -14,
+      "eq": "cinematic_vocal",
+      "compression": {
+        "enabled": true,
+        "threshold": -18,
+        "ratio": 3,
+        "attack": 0.1,
+        "release": 0.3
+      }
+    },
+    "sfx": {
+      "volume": 0.5,
+      "transition_sounds": true,
+      "transition_sound": "cinematic_whoosh",
+      "ambient_layers": true
+    },
+    "master": {
+      "loudness": -14,
+      "true_peak": -1.0,
+      "limiter": true,
+      "stereo_width": 1.1,
+      "reverb": {
+        "enabled": true,
+        "room_size": 0.3,
+        "damping": 0.5,
+        "mix": 0.05
+      }
+    }
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "elegant_ass",
+    "elegant_ass": {
+      "enabled": true,
+      "format": "ASS",
+      "font": "Lato Light",
+      "size": 48,
+      "primary_color": "&H00FFFFFF",
+      "secondary_color": "&H00E8D5B7",
+      "outline_color": "&H00000000",
+      "back_color": "&H80000000",
+      "bold": false,
+      "italic": false,
+      "border_style": "outline_shadow",
+      "outline_width": 2,
+      "shadow_depth": 3,
+      "alignment": "bottom_center",
+      "margin_v": 60,
+      "margin_l": 80,
+      "margin_r": 80,
+      "fade_in_ms": 200,
+      "fade_out_ms": 200,
+      "positioning": "smart_wrap",
+      "karaoke": false,
+      "animation": {
+        "enabled": true,
+        "type": "fade_per_line",
+        "fade_duration_ms": 300
+      }
+    },
+    "source": "auto_generate",
+    "language": "en",
+    "word_timestamps": true,
+    "max_words_per_line": 8,
+    "max_lines": 2
+  },
+  "effects": {
+    "intro": {
+      "type": "fade_from_black_slow",
+      "duration": 2.0
+    },
+    "outro": {
+      "type": "fade_to_black_slow",
+      "duration": 3.0
+    },
+    "speed_ramping": {
+      "enabled": true
+    },
+    "chromatic_aberration": {
+      "enabled": false
+    },
+    "film_border": {
+      "enabled": false
+    },
+    "lens_flare": {
+      "enabled": false
+    },
+    "anamorphic_streaks": {
+      "enabled": true,
+      "intensity": 0.15,
+      "color": "#B8D4E3",
+      "angle": 0
+    },
+    "letterbox_pulse": {
+      "enabled": false
+    }
+  },
+  "watermark": {
+    "enabled": false
+  },
+  "metadata": {
+    "title": "Cinematic Template",
+    "version": "1.0.0",
+    "author": "Video Editor Pipeline",
+    "tags": ["cinematic", "professional", "film", "teal_orange", "all_platforms"]
+  }
+}

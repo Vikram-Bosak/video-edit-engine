@@ -1,0 +1,247 @@
+{
+  "$schema": "video-template-v1",
+  "name": "Instagram Reel",
+  "description": "Elegant Instagram Reel template with warm vintage grading and smooth transitions",
+  "platform": "instagram_reel",
+  "crop": {
+    "aspect_ratio": "9:16",
+    "width": 1080,
+    "height": 1920,
+    "anchor": "center",
+    "padding": 0
+  },
+  "duration": {
+    "max_seconds": 90,
+    "min_seconds": 3,
+    "default_intro": 0.8,
+    "default_outro": 1.5
+  },
+  "export": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "codec": "H264",
+    "bitrate": "8Mbps",
+    "audio_codec": "AAC",
+    "audio_bitrate": "192kHz",
+    "container": "mp4",
+    "pixel_format": "yuv420p",
+    "profile": "high",
+    "level": "4.1",
+    "keyframe_interval": 2,
+    "encoding_preset": "slow",
+    "two_pass": true
+  },
+  "transitions": {
+    "defaults": ["fade", "blur"],
+    "available": ["fade", "blur", "dissolve", "cross_fade", "soft_wipe"],
+    "duration": {
+      "default": 0.7,
+      "min": 0.4,
+      "max": 1.2
+    },
+    "easing": "ease_in_out",
+    "between_clips": true,
+    "at_intro": "fade",
+    "at_outro": "fade",
+    "blur_radius": 20,
+    "blur_quality": "high"
+  },
+  "text": {
+    "style": "minimal",
+    "design": "elegant",
+    "alignment": "center",
+    "default_font": "Playfair Display",
+    "fallback_font": "Georgia",
+    "sizes": {
+      "title": 64,
+      "subtitle": 44,
+      "body": 34,
+      "caption": 26,
+      "accent": 38
+    },
+    "colors": {
+      "primary": "#FFFFFF",
+      "secondary": "#F5E6D3",
+      "accent": "#D4A574",
+      "outline": "none",
+      "shadow": "#00000040"
+    },
+    "outline": {
+      "enabled": false
+    },
+    "shadow": {
+      "enabled": true,
+      "offset_x": 0,
+      "offset_y": 2,
+      "blur": 8,
+      "color": "#00000040"
+    },
+    "letter_spacing": 2,
+    "line_height": 1.6,
+    "animation": {
+      "entrance": "soft_fade_up",
+      "exit": "soft_fade_out",
+      "duration": 0.6
+    },
+    "position": {
+      "x": "center",
+      "y": "center",
+      "margin_bottom": 220
+    },
+    "safe_zone_margin": 160
+  },
+  "color_grading": {
+    "preset": "warm_vintage",
+    "lut": "warm_vintage_film.cube",
+    "adjustments": {
+      "brightness": 0.03,
+      "contrast": 1.08,
+      "saturation": 0.9,
+      "highlights": 0.08,
+      "shadows": 0.05,
+      "temperature": 0.15,
+      "tint": 0.02,
+      "vibrance": 1.0,
+      "clarity": 1.05
+    },
+    "curves": {
+      "enabled": true,
+      "rgb": "warm_lifted_blacks",
+      "red": "slight_warm_boost",
+      "green": "subtle_lift",
+      "blue": "shadow_push"
+    },
+    "color_wheels": {
+      "enabled": true,
+      "shadows": { "hue": 30, "saturation": 0.2 },
+      "midtones": { "hue": 40, "saturation": 0.15 },
+      "highlights": { "hue": 45, "saturation": 0.1 }
+    },
+    "vignette": {
+      "enabled": true,
+      "strength": 0.25,
+      "size": 0.75,
+      "feather": 0.9,
+      "color": "#000000"
+    },
+    "film_grain": {
+      "enabled": true,
+      "amount": 0.08,
+      "size": 0.5,
+      "softness": 0.6
+    },
+    "halation": {
+      "enabled": true,
+      "intensity": 0.15,
+      "threshold": 0.8
+    }
+  },
+  "audio": {
+    "music": {
+      "volume": 0.3,
+      "fade_in": 1.5,
+      "fade_out": 2.5,
+      "ducking": {
+        "enabled": true,
+        "threshold": -22,
+        "ratio": 4,
+        "attack": 0.1,
+        "release": 0.8
+      },
+      "loop": true,
+      "beat_sync": false
+    },
+    "voiceover": {
+      "volume": 1.0,
+      "normalize": true,
+      "target_loudness": -14,
+      "eq": "warm_vocal"
+    },
+    "sfx": {
+      "volume": 0.4,
+      "transition_sounds": false
+    },
+    "master": {
+      "loudness": -14,
+      "true_peak": -1.0,
+      "limiter": true
+    }
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "elegant_minimal",
+    "elegant_minimal": {
+      "enabled": true,
+      "default_color": "#F5E6D3",
+      "highlight_color": "#FFFFFF",
+      "background_color": "#00000066",
+      "font": "Playfair Display",
+      "size": 36,
+      "animation": "soft_fade",
+      "position": "center_bottom",
+      "margin_bottom": 300,
+      "max_width": 880,
+      "word_padding": 8,
+      "line_spacing": 1.6,
+      "letter_spacing": 1
+    },
+    "source": "auto_generate",
+    "language": "en",
+    "word_timestamps": true,
+    "max_words_per_line": 6,
+    "max_lines": 2,
+    "background": {
+      "enabled": true,
+      "style": "soft_blur",
+      "color": "#00000055",
+      "padding": 20,
+      "blur": 8,
+      "border_radius": 12
+    }
+  },
+  "overlays": {
+    "progress_bar": {
+      "enabled": true,
+      "position": "top",
+      "height": 4,
+      "color": "#FFFFFF",
+      "background_color": "#FFFFFF33",
+      "corner_radius": 2,
+      "margin_top": 60,
+      "margin_horizontal": 40,
+      "animation": "smooth_fill",
+      "show_on_loop": false
+    }
+  },
+  "effects": {
+    "intro": {
+      "type": "soft_fade_from_white",
+      "duration": 0.8
+    },
+    "outro": {
+      "type": "soft_fade_to_black",
+      "duration": 1.5
+    },
+    "speed_ramping": {
+      "enabled": false
+    },
+    "chromatic_aberration": {
+      "enabled": false
+    },
+    "light_leak": {
+      "enabled": true,
+      "intensity": 0.1,
+      "overlay_blend": "screen"
+    }
+  },
+  "watermark": {
+    "enabled": false
+  },
+  "metadata": {
+    "title": "Instagram Reel Template",
+    "version": "1.0.0",
+    "author": "Video Editor Pipeline",
+    "tags": ["instagram", "reel", "short_form", "social", "vintage", "elegant"]
+  }
+}

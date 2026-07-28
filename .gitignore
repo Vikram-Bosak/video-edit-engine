@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Temp files
+temp/
+*.tmp
+*.log
+
+# Output (keep in git for demo)
+# output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Secrets
+.env
+*.pem
+*.key
+
+# Large files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.gif
+*.zip
+*.tar.gz

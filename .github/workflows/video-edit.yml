@@ -1,0 +1,149 @@
+name: AI Video Edit Engine
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: 'Video URL to process'
+        required: false
+        type: string
+      platform:
+        description: 'Target platform'
+        required: true
+        default: 'tiktok'
+        type: choice
+        options:
+          - tiktok
+          - youtube_short
+          - facebook_reel
+          - instagram_reel
+          - twitter_video
+      quality:
+        description: 'Quality preset'
+        required: false
+        default: 'high'
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+          - ultra
+
+  push:
+    branches: [main]
+    paths:
+      - 'assets/videos/**'
+
+  schedule:
+    - cron: '0 0 * * 0'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  PYTHON_VERSION: '3.11'
+  PLATFORM: ${{ github.event.inputs.platform || 'tiktok' }}
+
+jobs:
+  process:
+    name: Process Videos
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ffmpeg \
+            imagemagick \
+            libass-dev \
+            libgl1-mesa-dev \
+            libglib2.0-0 \
+            libsm6 \
+            libxext6 \
+            libxrender-dev
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify installations
+        run: |
+          ffmpeg -version | head -1
+          python -c "import cv2; print(f'OpenCV {cv2.__version__}')"
+          python -c "import numpy; print(f'NumPy {numpy.__version__}')"
+          python -c "from PIL import Image; print('Pillow OK')"
+          echo "All dependencies verified"
+
+      - name: Download input (if URL provided)
+        if: github.event.inputs.video_url != ''
+        run: |
+          mkdir -p assets/videos
+          python -c "
+          from python.processors.video_analyzer import VideoDownloader
+          d = VideoDownloader()
+          d.download_video('${{ github.event.inputs.video_url }}', 'assets/videos')
+          "
+
+      - name: Process videos
+        run: |
+          python -m python.main \
+            --input assets/videos/ \
+            --output output/ \
+            --platform ${{ env.PLATFORM }} \
+            --batch
+
+      - name: Generate report
+        if: always()
+        run: |
+          python -c "
+          import os, json, glob
+          from python.processors.reporter import ReportGenerator
+          r = ReportGenerator('reports')
+          files = glob.glob('output/**/*.mp4', recursive=True)
+          print(f'Generated {len(files)} video(s)')
+          "
+
+      - name: Upload video outputs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: edited-videos-${{ github.run_number }}
+          path: output/
+          retention-days: 7
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reports-${{ github.run_number }}
+          path: reports/
+          retention-days: 30
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf temp/
+          echo "Cleanup complete"
+
+  batch-process:
+    name: Batch Process (if many videos)
+    needs: process
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check for additional work
+        run: echo "Batch processing complete"

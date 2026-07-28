@@ -1,0 +1,164 @@
+{
+  "version": "1.0.0",
+  "default_platform": "tiktok",
+  "temp_dir": "temp",
+  "output_dir": "output",
+  "platforms": {
+    "tiktok": {
+      "width": 1080,
+      "height": 1920,
+      "fps": 30,
+      "max_duration": 180,
+      "codec": "libx264",
+      "bitrate": "8M",
+      "audio_codec": "aac",
+      "audio_bitrate": "128k",
+      "crf": 18,
+      "preset": "fast"
+    },
+    "youtube_short": {
+      "width": 1080,
+      "height": 1920,
+      "fps": 30,
+      "max_duration": 60,
+      "codec": "libx264",
+      "bitrate": "10M",
+      "audio_codec": "aac",
+      "audio_bitrate": "128k",
+      "crf": 18,
+      "preset": "fast"
+    },
+    "facebook_reel": {
+      "width": 1080,
+      "height": 1920,
+      "fps": 30,
+      "max_duration": 90,
+      "codec": "libx264",
+      "bitrate": "8M",
+      "audio_codec": "aac",
+      "audio_bitrate": "128k",
+      "crf": 18,
+      "preset": "fast"
+    },
+    "instagram_reel": {
+      "width": 1080,
+      "height": 1920,
+      "fps": 30,
+      "max_duration": 90,
+      "codec": "libx264",
+      "bitrate": "8M",
+      "audio_codec": "aac",
+      "audio_bitrate": "128k",
+      "crf": 18,
+      "preset": "fast"
+    },
+    "twitter_video": {
+      "width": 1280,
+      "height": 720,
+      "fps": 30,
+      "max_duration": 140,
+      "codec": "libx264",
+      "bitrate": "5M",
+      "audio_codec": "aac",
+      "audio_bitrate": "128k",
+      "crf": 20,
+      "preset": "fast"
+    }
+  },
+  "scene_detection": {
+    "threshold": 30.0,
+    "min_scene_duration": 0.5,
+    "max_scenes": 50,
+    "motion_weight": 0.45,
+    "audio_weight": 0.30,
+    "duration_weight": 0.25
+  },
+  "smart_crop": {
+    "target_aspect": "9:16",
+    "strategy": "smart",
+    "face_weight": 5.0,
+    "human_weight": 3.0,
+    "vehicle_weight": 2.0,
+    "smoothing_window": 10
+  },
+  "transitions": {
+    "default_type": "fade",
+    "default_duration": 0.5,
+    "available": [
+      "fade", "flash", "whip", "blur", "slide", "push",
+      "zoom", "mask_reveal", "glitch", "light_leak",
+      "motion_blur", "film_burn", "wipe_left", "wipe_right"
+    ]
+  },
+  "text": {
+    "default_font": "Arial",
+    "title_size": 80,
+    "subtitle_size": 48,
+    "caption_size": 42,
+    "title_color": "#FFFFFF",
+    "subtitle_color": "#CCCCCC",
+    "stroke_color": "#000000",
+    "stroke_width": 3,
+    "position": "bottom_center",
+    "animation": "pop"
+  },
+  "audio": {
+    "music_volume": 0.3,
+    "voiceover_volume": 1.0,
+    "original_volume": 0.8,
+    "fade_in": 1.0,
+    "fade_out": 2.0,
+    "normalize_lufs": -14.0,
+    "enable_ducking": true,
+    "duck_amount": 0.6,
+    "silence_threshold_db": -40,
+    "min_silence_duration": 0.5
+  },
+  "subtitles": {
+    "enabled": true,
+    "font": "Arial",
+    "font_size": 42,
+    "primary_color": "#FFFFFF",
+    "outline_color": "#000000",
+    "outline_width": 3,
+    "position": "bottom",
+    "max_chars_per_line": 40,
+    "word_highlight": true,
+    "highlight_color": "#FFFF00",
+    "animation": "pop",
+    "format": "ass"
+  },
+  "color_grading": {
+    "preset": "cinematic",
+    "brightness": 0.0,
+    "contrast": 1.0,
+    "saturation": 1.1,
+    "temperature": 0.0,
+    "gamma": 1.0,
+    "sharpen": 0.5,
+    "noise_reduction": 0.0
+  },
+  "motion_effects": {
+    "enable_ken_burns": true,
+    "enable_zoom": true,
+    "enable_shake": false,
+    "zoom_intensity": 0.15,
+    "ken_burns_scale": 1.15,
+    "shake_intensity": 2.0,
+    "min_scene_duration_for_motion": 3.0
+  },
+  "export": {
+    "codec": "libx264",
+    "preset": "fast",
+    "crf": 18,
+    "pixel_format": "yuv420p",
+    "faststart": true,
+    "two_pass": false
+  },
+  "batch": {
+    "max_workers": 2,
+    "retry_count": 2,
+    "timeout_seconds": 3600,
+    "memory_limit_mb": 4096
+  }
+}

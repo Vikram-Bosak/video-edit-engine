@@ -1,0 +1,199 @@
+{
+  "$schema": "video-template-v1",
+  "name": "Facebook Reel",
+  "description": "Optimized template for Facebook Reels with vibrant styling and engaging transitions",
+  "platform": "facebook_reel",
+  "crop": {
+    "aspect_ratio": "9:16",
+    "width": 1080,
+    "height": 1920,
+    "anchor": "center",
+    "padding": 0
+  },
+  "duration": {
+    "max_seconds": 90,
+    "min_seconds": 3,
+    "default_intro": 0.5,
+    "default_outro": 1.0
+  },
+  "export": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "codec": "H264",
+    "bitrate": "8Mbps",
+    "audio_codec": "AAC",
+    "audio_bitrate": "192kHz",
+    "container": "mp4",
+    "pixel_format": "yuv420p",
+    "profile": "high",
+    "level": "4.1",
+    "keyframe_interval": 2,
+    "encoding_preset": "slow",
+    "two_pass": true
+  },
+  "transitions": {
+    "defaults": ["fade", "slide"],
+    "available": ["fade", "slide", "dissolve", "wipe_left", "wipe_right"],
+    "duration": {
+      "default": 0.5,
+      "min": 0.3,
+      "max": 1.0
+    },
+    "easing": "ease_in_out",
+    "between_clips": true,
+    "at_intro": "fade",
+    "at_outro": "fade"
+  },
+  "text": {
+    "style": "bold",
+    "alignment": "center",
+    "default_font": "Montserrat Bold",
+    "fallback_font": "Arial Bold",
+    "sizes": {
+      "title": 72,
+      "subtitle": 48,
+      "body": 36,
+      "caption": 28
+    },
+    "colors": {
+      "primary": "#FFFFFF",
+      "secondary": "#FFD700",
+      "outline": "#000000",
+      "shadow": "#00000080"
+    },
+    "outline": {
+      "enabled": true,
+      "width": 3,
+      "color": "#000000"
+    },
+    "shadow": {
+      "enabled": true,
+      "offset_x": 2,
+      "offset_y": 2,
+      "blur": 4,
+      "color": "#00000080"
+    },
+    "animation": {
+      "entrance": "fade_up",
+      "exit": "fade_out",
+      "duration": 0.4
+    },
+    "position": {
+      "x": "center",
+      "y": "center",
+      "margin_bottom": 200
+    },
+    "safe_zone_margin": 150
+  },
+  "color_grading": {
+    "preset": "vibrant",
+    "lut": "vibrant_pop.cube",
+    " adjustments": {
+      "brightness": 0.05,
+      "contrast": 1.15,
+      "saturation": 1.3,
+      "highlights": 0.1,
+      "shadows": 0.05,
+      "temperature": 0,
+      "tint": 0,
+      "vibrance": 1.2,
+      "clarity": 1.1
+    },
+    "curves": {
+      "enabled": true,
+      "rgb": "gentle_s_curve"
+    },
+    "vignette": {
+      "enabled": false
+    },
+    "film_grain": {
+      "enabled": false
+    }
+  },
+  "audio": {
+    "music": {
+      "volume": 0.3,
+      "fade_in": 1.0,
+      "fade_out": 2.0,
+      "ducking": {
+        "enabled": true,
+        "threshold": -20,
+        "ratio": 4,
+        "attack": 0.1,
+        "release": 0.5
+      },
+      "loop": true,
+      "beat_sync": false
+    },
+    "voiceover": {
+      "volume": 1.0,
+      "normalize": true,
+      "target_loudness": -14
+    },
+    "sfx": {
+      "volume": 0.6,
+      "transition_sounds": false
+    },
+    "master": {
+      "loudness": -14,
+      "true_peak": -1.0,
+      "limiter": true
+    }
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "word_highlight",
+    "word_highlight": {
+      "enabled": true,
+      "highlight_color": "#FFD700",
+      "default_color": "#FFFFFF",
+      "background_color": "#000000B3",
+      "font": "Montserrat Bold",
+      "size": 40,
+      "animation": "pop_scale",
+      "position": "center_bottom",
+      "margin_bottom": 300,
+      "max_width": 900,
+      "word_padding": 4,
+      "line_spacing": 1.4
+    },
+    "source": "auto_generate",
+    "language": "en",
+    "word_timestamps": true,
+    "max_words_per_line": 6,
+    "max_lines": 2,
+    "background": {
+      "enabled": true,
+      "style": "rounded_box",
+      "color": "#000000B3",
+      "padding": 12,
+      "border_radius": 8
+    }
+  },
+  "effects": {
+    "intro": {
+      "type": "fade_from_black",
+      "duration": 0.5
+    },
+    "outro": {
+      "type": "fade_to_black",
+      "duration": 1.0
+    },
+    "speed_ramping": {
+      "enabled": false
+    },
+    "chromatic_aberration": {
+      "enabled": false
+    }
+  },
+  "watermark": {
+    "enabled": false
+  },
+  "metadata": {
+    "title": "Facebook Reel Template",
+    "version": "1.0.0",
+    "author": "Video Editor Pipeline",
+    "tags": ["facebook", "reel", "short_form", "social"]
+  }
+}
