@@ -122,7 +122,6 @@ def search_and_download_clips(query: str, download_dir: str, limit: int = 3) -> 
 def create_meme_sfx(temp_dir: str) -> str:
     """Generates a synthetic meme boing sound effect."""
     sfx_path = os.path.join(temp_dir, "boing_sfx.wav")
-    import subprocess
     cmd = [
         "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
         "-f", "lavfi", "-i", "sine=frequency=400:duration=0.5",
@@ -208,12 +207,29 @@ def add_ryth_elements_with_opencv(
     out.release()
 
 
+def get_rank_titles_for_topic(query: str) -> List[str]:
+    q = query.lower()
+    if "swimming" in q or "pool" in q:
+        return ["BELLY FLOP", "SLIPPERY TILE", "SLIDE LAUNCH"]
+    elif "football" in q or "soccer" in q:
+        return ["BICYCLE KICK", "GOALIE FAIL", "OFFSIDE CELEBRATION"]
+    elif "gym" in q or "workout" in q:
+        return ["TREADMILL FLY", "WEIGHT WIN", "KNEE CHAT"]
+    elif "gaming" in q or "game" in q:
+        return ["NOOB PLAY", "PHYSICS GLITCH", "KEYBOARD SMASH"]
+    elif "basketball" in q:
+        return ["LEBRON NOPE", "BALL DROP", "YEEZY PLAY"]
+    else:
+        return ["MOMENT THREE", "MOMENT TWO", "MOMENT ONE"]
+
+
 def edit_clip_ryth_style(
     input_path: str,
     output_path: str,
     moment_num: int,
     sfx_path: str,
-    temp_dir: str
+    temp_dir: str,
+    query: str = "funny basketball fails"
 ) -> bool:
     """
     Applies Ryth-style editing to a single video clip:
@@ -224,9 +240,8 @@ def edit_clip_ryth_style(
     """
     logger.info(f"Applying Ryth-style edits to {input_path} (Moment #{moment_num})")
     
-    # Step 1: Run SFX audio mixing with FFmpeg (no video filter, extremely fast!)
+    # Step 1: Run SFX audio mixing with FFmpeg
     sfx_mixed_temp = os.path.join(temp_dir, f"sfx_mixed_{moment_num}.mp4")
-    import subprocess
     cmd = [
         "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
         "-i", input_path,
@@ -236,7 +251,7 @@ def edit_clip_ryth_style(
         f"[0:a][delayed_sfx]amix=inputs=2:duration=first[outa]",
         "-map", "0:v",
         "-map", "[outa]",
-        "-c:v", "copy",  # Direct copy, no transcoding!
+        "-c:v", "copy",
         "-c:a", "aac",
         sfx_mixed_temp
     ]
@@ -247,13 +262,13 @@ def edit_clip_ryth_style(
         return False
 
     # Step 2: Apply Zoom, Draw text overlays & Grayscale dynamically with OpenCV
-    rank_titles = ["KABOOM", "SPIDEY", "LEBRON"]  # Map to index 3, 2, 1
+    rank_titles = get_rank_titles_for_topic(query)
     try:
         temp_opencv_out = os.path.join(temp_dir, f"opencv_out_{moment_num}.mp4")
         add_ryth_elements_with_opencv(sfx_mixed_temp, temp_opencv_out, moment_num, rank_titles)
         
         # Merge the silent OpenCV output video with the original audio from sfx_mixed_temp,
-        # encoding to highly compatible H.264 format
+        # encoding to H.264 format
         cmd_merge = [
             "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
             "-i", temp_opencv_out,
@@ -284,7 +299,6 @@ def generate_voiceover_and_srt(script_lines: List[str], temp_dir: str) -> tuple[
         tts.save(audio_path)
     except ImportError:
         logger.warning("gTTS not installed. Creating placeholder audio file.")
-        import subprocess
         cmd = [
             "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
             "-f", "lavfi", "-i", "sine=frequency=1000:duration=15",
@@ -339,6 +353,12 @@ def get_script_for_topic(query: str) -> List[str]:
             "Moment Number Two: Watch this guy drop the ball and his self-esteem at the same time.",
             "Moment Number One: Absolute legendary fail, my man playing in Yeezys."
         ]
+    elif "gaming" in q or "game" in q or "play" in q:
+        return [
+            "Moment Number Three: Bro thought he was a pro esports player, but this fail is just pure comedy.",
+            "Moment Number Two: That moment when the game physics decide to glitch out and ruin your entire run.",
+            "Moment Number One: Rage quitting at its finest. Rest in peace to another keyboard."
+        ]
     else:
         return [
             "Moment Number Three: That moment when self-confidence meets absolute reality.",
@@ -376,7 +396,7 @@ def main():
         # Moment 3, 2, 1 descending
         moment_num = 3 - i
         out_clip_path = os.path.join(temp_dir, f"edited_moment_{moment_num}.mp4")
-        if edit_clip_ryth_style(clip, out_clip_path, moment_num, sfx_path, temp_dir):
+        if edit_clip_ryth_style(clip, out_clip_path, moment_num, sfx_path, temp_dir, args.query):
             edited_clips.append(out_clip_path)
             
     if len(edited_clips) < 3:
@@ -394,7 +414,6 @@ def main():
             f.write(f"file '{clip}'\n")
             
     raw_concat_path = os.path.join(temp_dir, "raw_concat.mp4")
-    import subprocess
     cmd_concat = [
         "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
         "-f", "concat", "-safe", "0", "-i", concat_list_path,
@@ -418,9 +437,13 @@ def main():
     # Step 7: Apply Character Reaction Overlay
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
     overlay_engine = CharacterOverlayEngine()
+    
+    # Always overlay the custom Fox avatar if it exists
+    fox_avatar = r"C:\Users\admin\.gemini\antigravity-ide\scratch\video-edit-engine\assets\logos\fox_observer.png"
     success = overlay_engine.overlay_avatar(
         video_path=synced_video_path,
         output_path=args.output,
+        avatar_path=fox_avatar if os.path.exists(fox_avatar) else None,
         position="bottom_right",
         scale=0.3
     )
