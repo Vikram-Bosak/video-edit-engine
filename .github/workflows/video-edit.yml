@@ -3,14 +3,27 @@ name: AI Video Edit Engine
 on:
   workflow_dispatch:
     inputs:
+      topic:
+        description: 'Topic to create ranking video (e.g. "high jump fails", "funny basketball")'
+        required: true
+        type: string
       video_url:
-        description: 'Video URL to process'
+        description: 'Specific video URL (optional - skip topic search)'
         required: false
         type: string
+      num_clips:
+        description: 'Number of clips (6 for 6→1 countdown)'
+        required: false
+        default: '6'
+        type: choice
+        options:
+          - '5'
+          - '6'
+          - '8'
       platform:
         description: 'Target platform'
         required: true
-        default: 'tiktok'
+        default: 'youtube_short'
         type: choice
         options:
           - tiktok
@@ -28,6 +41,22 @@ on:
           - medium
           - high
           - ultra
+      enable_voiceover:
+        description: 'Add AI voiceover narration'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      enable_character_overlay:
+        description: 'Add fox character overlay'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
       use_template:
         description: 'Use editing template'
         required: false
@@ -35,10 +64,6 @@ on:
         type: choice
         options:
           - none
-          - tiktok
-          - youtube_short
-          - facebook_reel
-          - instagram_reel
           - cinematic
           - fast_paced
 
@@ -49,7 +74,7 @@ on:
       - '.github/workflows/video-edit.yml'
 
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: '0 0 * * *'
 
 permissions:
   contents: read
@@ -57,16 +82,19 @@ permissions:
 
 env:
   PYTHON_VERSION: '3.11'
-  PLATFORM: ${{ github.event.inputs.platform || 'tiktok' }}
+  PLATFORM: ${{ github.event.inputs.platform || 'youtube_short' }}
   QUALITY: ${{ github.event.inputs.quality || 'high' }}
-  TEMPLATE: ${{ github.event.inputs.use_template || 'none' }}
+  TOPIC: ${{ github.event.inputs.topic || 'funny fails compilation' }}
+  NUM_CLIPS: ${{ github.event.inputs.num_clips || '6' }}
+  ENABLE_VOICEOVER: ${{ github.event.inputs.enable_voiceover || 'true' }}
+  ENABLE_OVERLAY: ${{ github.event.inputs.enable_character_overlay || 'true' }}
   INPUT_DIR: assets/videos
   OUTPUT_DIR: output
   REPORT_DIR: reports
 
 jobs:
-  process:
-    name: Process Videos (${{ env.PLATFORM }})
+  ranking-compilation:
+    name: Ranking Compilation (${{ env.TOPIC }})
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -102,104 +130,41 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install yt-dlp gTTS feedparser google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client --quiet
 
       - name: Verify installations
         run: |
           ffmpeg -version | head -1
           ffprobe -version | head -1
+          yt-dlp --version
           python -c "import cv2; print(f'OpenCV {cv2.__version__}')"
           python -c "import numpy; print(f'NumPy {numpy.__version__}')"
-          python -c "from PIL import Image; print('Pillow OK')"
-          python -c "import yaml; print('PyYAML OK')"
           echo "All dependencies verified"
 
-      - name: Download input (if URL provided)
-        if: ${{ github.event.inputs.video_url != '' }}
+      - name: Run ranking compilation workflow
+        id: ranking
         run: |
-          mkdir -p ${{ env.INPUT_DIR }}
-          pip install yt-dlp --quiet
-          yt-dlp \
-            --format "bestvideo[height<=1080]+bestaudio/best[height<=1080]" \
-            --merge-output-format mp4 \
-            --output "${{ env.INPUT_DIR }}/downloaded.%(ext)s" \
-            "${{ github.event.inputs.video_url }}"
-          ls -la ${{ env.INPUT_DIR }}
+          mkdir -p ${{ env.OUTPUT_DIR }} ${{ env.REPORT_DIR }} ${{ env.INPUT_DIR }}
+          python -m python.ranking_compilation_workflow \
+            --query "${{ env.TOPIC }}" \
+            --output "${{ env.OUTPUT_DIR }}/ranking_compilation.mp4" \
+            --clips ${{ env.NUM_CLIPS }} \
+            --json-result "${{ env.REPORT_DIR }}/workflow_result.json" \
+            $( [ "${{ env.ENABLE_VOICEOVER }}" = "false" ] && echo "--no-voiceover" ) \
+            $( [ "${{ env.ENABLE_OVERLAY }}" = "false" ] && echo "--no-overlay" )
 
-      - name: Check input videos
-        id: check_input
+      - name: Display workflow result
+        if: always()
         run: |
-          echo "INPUT_DIR=${{ env.INPUT_DIR }}" >> $GITHUB_OUTPUT
-          if [ -z "$(ls -A ${{ env.INPUT_DIR }}/ 2>/dev/null | grep -i '\.\(mp4\|avi\|mov\|mkv\|webm\|flv\)$')" ]; then
-            echo "No video files found in ${{ env.INPUT_DIR }}"
-            echo "VIDEOS_FOUND=false" >> $GITHUB_OUTPUT
-          else
-            echo "Found video files:"
-            ls -lh ${{ env.INPUT_DIR }}/
-            echo "VIDEOS_FOUND=true" >> $GITHUB_OUTPUT
+          if [ -f "${{ env.REPORT_DIR }}/workflow_result.json" ]; then
+            cat "${{ env.REPORT_DIR }}/workflow_result.json"
           fi
-
-      - name: Process videos
-        if: steps.check_input.outputs.VIDEOS_FOUND == 'true'
-        run: |
-          mkdir -p ${{ env.OUTPUT_DIR }} ${{ env.REPORT_DIR }}
-          python -m python.main \
-            --input ${{ env.INPUT_DIR }}/ \
-            --output ${{ env.OUTPUT_DIR }} \
-            --platform ${{ env.PLATFORM }} \
-            --batch \
-            --verbose
-
-      - name: Run tests
-        if: always()
-        run: |
-          pip install pytest --quiet
-          python -m pytest tests/ -v --tb=short || echo "Some tests failed"
-
-      - name: Generate report
-        if: always()
-        run: |
-          python -c "
-          import os, json, glob, sys
-          from python.processors.reporter import ReportGenerator
-          from python.processors.batch_processor import ProcessResult, BatchResult
-          from datetime import datetime
-
-          r = ReportGenerator('${{ env.REPORT_DIR }}')
-
-          videos = glob.glob('${{ env.OUTPUT_DIR }}/**/*.mp4', recursive=True)
-          results = []
-          for v in videos:
-              results.append(ProcessResult(
-                  video_path=v,
-                  output_path=v,
-                  success=True,
-                  duration_seconds=0,
-                  file_size_mb=os.path.getsize(v) / (1024*1024),
-              ))
-
-          batch = BatchResult(
-              batch_id='github_' + str(${{ github.run_number }}),
-              results=results,
-              total=len(videos),
-              success_count=len(videos),
-              failure_count=0,
-              start_time=datetime.now().isoformat(),
-              end_time=datetime.now().isoformat(),
-          )
-
-          if results:
-              json_path = r.generate_batch_report(batch, '${{ env.REPORT_DIR }}')
-              html_path = r.generate_html_report(batch, '${{ env.REPORT_DIR }}')
-              print(f'Report: {html_path}')
-          else:
-              print('No videos processed - no report generated')
-          "
 
       - name: Upload video outputs
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: edited-videos-${{ github.run_number }}-${{ env.PLATFORM }}
+          name: ranking-videos-${{ github.run_number }}
           path: ${{ env.OUTPUT_DIR }}/
           retention-days: 7
           if-no-files-found: warn
