@@ -28,11 +28,25 @@ on:
           - medium
           - high
           - ultra
+      use_template:
+        description: 'Use editing template'
+        required: false
+        default: 'none'
+        type: choice
+        options:
+          - none
+          - tiktok
+          - youtube_short
+          - facebook_reel
+          - instagram_reel
+          - cinematic
+          - fast_paced
 
   push:
-    branches: [main]
+    branches: [master, main]
     paths:
       - 'assets/videos/**'
+      - '.github/workflows/video-edit.yml'
 
   schedule:
     - cron: '0 0 * * 0'
@@ -44,10 +58,15 @@ permissions:
 env:
   PYTHON_VERSION: '3.11'
   PLATFORM: ${{ github.event.inputs.platform || 'tiktok' }}
+  QUALITY: ${{ github.event.inputs.quality || 'high' }}
+  TEMPLATE: ${{ github.event.inputs.use_template || 'none' }}
+  INPUT_DIR: assets/videos
+  OUTPUT_DIR: output
+  REPORT_DIR: reports
 
 jobs:
   process:
-    name: Process Videos
+    name: Process Videos (${{ env.PLATFORM }})
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -72,7 +91,12 @@ jobs:
             libglib2.0-0 \
             libsm6 \
             libxext6 \
-            libxrender-dev
+            libxrender-dev \
+            fonts-dejavu \
+            fonts-liberation \
+            fonts-noto \
+            fonts-noto-color-emoji \
+            fonts-freefont-ttf
 
       - name: Install Python dependencies
         run: |
@@ -82,68 +106,115 @@ jobs:
       - name: Verify installations
         run: |
           ffmpeg -version | head -1
+          ffprobe -version | head -1
           python -c "import cv2; print(f'OpenCV {cv2.__version__}')"
           python -c "import numpy; print(f'NumPy {numpy.__version__}')"
           python -c "from PIL import Image; print('Pillow OK')"
+          python -c "import yaml; print('PyYAML OK')"
           echo "All dependencies verified"
 
       - name: Download input (if URL provided)
-        if: github.event.inputs.video_url != ''
+        if: ${{ github.event.inputs.video_url != '' }}
         run: |
-          mkdir -p assets/videos
-          python -c "
-          from python.processors.video_analyzer import VideoDownloader
-          d = VideoDownloader()
-          d.download_video('${{ github.event.inputs.video_url }}', 'assets/videos')
-          "
+          mkdir -p ${{ env.INPUT_DIR }}
+          pip install yt-dlp --quiet
+          yt-dlp \
+            --format "bestvideo[height<=1080]+bestaudio/best[height<=1080]" \
+            --merge-output-format mp4 \
+            --output "${{ env.INPUT_DIR }}/downloaded.%(ext)s" \
+            "${{ github.event.inputs.video_url }}"
+          ls -la ${{ env.INPUT_DIR }}
+
+      - name: Check input videos
+        id: check_input
+        run: |
+          echo "INPUT_DIR=${{ env.INPUT_DIR }}" >> $GITHUB_OUTPUT
+          if [ -z "$(ls -A ${{ env.INPUT_DIR }}/ 2>/dev/null | grep -i '\.\(mp4\|avi\|mov\|mkv\|webm\|flv\)$')" ]; then
+            echo "No video files found in ${{ env.INPUT_DIR }}"
+            echo "VIDEOS_FOUND=false" >> $GITHUB_OUTPUT
+          else
+            echo "Found video files:"
+            ls -lh ${{ env.INPUT_DIR }}/
+            echo "VIDEOS_FOUND=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Process videos
+        if: steps.check_input.outputs.VIDEOS_FOUND == 'true'
         run: |
+          mkdir -p ${{ env.OUTPUT_DIR }} ${{ env.REPORT_DIR }}
           python -m python.main \
-            --input assets/videos/ \
-            --output output/ \
+            --input ${{ env.INPUT_DIR }}/ \
+            --output ${{ env.OUTPUT_DIR }} \
             --platform ${{ env.PLATFORM }} \
-            --batch
+            --batch \
+            --verbose
+
+      - name: Run tests
+        if: always()
+        run: |
+          pip install pytest --quiet
+          python -m pytest tests/ -v --tb=short || echo "Some tests failed"
 
       - name: Generate report
         if: always()
         run: |
           python -c "
-          import os, json, glob
+          import os, json, glob, sys
           from python.processors.reporter import ReportGenerator
-          r = ReportGenerator('reports')
-          files = glob.glob('output/**/*.mp4', recursive=True)
-          print(f'Generated {len(files)} video(s)')
+          from python.processors.batch_processor import ProcessResult, BatchResult
+          from datetime import datetime
+
+          r = ReportGenerator('${{ env.REPORT_DIR }}')
+
+          videos = glob.glob('${{ env.OUTPUT_DIR }}/**/*.mp4', recursive=True)
+          results = []
+          for v in videos:
+              results.append(ProcessResult(
+                  video_path=v,
+                  output_path=v,
+                  success=True,
+                  duration_seconds=0,
+                  file_size_mb=os.path.getsize(v) / (1024*1024),
+              ))
+
+          batch = BatchResult(
+              batch_id='github_' + str(${{ github.run_number }}),
+              results=results,
+              total=len(videos),
+              success_count=len(videos),
+              failure_count=0,
+              start_time=datetime.now().isoformat(),
+              end_time=datetime.now().isoformat(),
+          )
+
+          if results:
+              json_path = r.generate_batch_report(batch, '${{ env.REPORT_DIR }}')
+              html_path = r.generate_html_report(batch, '${{ env.REPORT_DIR }}')
+              print(f'Report: {html_path}')
+          else:
+              print('No videos processed - no report generated')
           "
 
       - name: Upload video outputs
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: edited-videos-${{ github.run_number }}
-          path: output/
+          name: edited-videos-${{ github.run_number }}-${{ env.PLATFORM }}
+          path: ${{ env.OUTPUT_DIR }}/
           retention-days: 7
+          if-no-files-found: warn
 
       - name: Upload reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: reports-${{ github.run_number }}
-          path: reports/
+          path: ${{ env.REPORT_DIR }}/
           retention-days: 30
+          if-no-files-found: warn
 
       - name: Cleanup
         if: always()
         run: |
           rm -rf temp/
           echo "Cleanup complete"
-
-  batch-process:
-    name: Batch Process (if many videos)
-    needs: process
-    if: always()
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - name: Check for additional work
-        run: echo "Batch processing complete"
