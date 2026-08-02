@@ -57,7 +57,6 @@ class GoogleDriveUploader:
         scopes = ["https://www.googleapis.com/auth/drive.file"]
         creds = service_account.Credentials.from_service_account_info(info, scopes=scopes)
         return build("drive", "v3", credentials=creds)
-
     def _get_oauth_creds(self):
         """Build OAuth credentials from credentials.json + token.json."""
         from google.oauth2.credentials import Credentials
@@ -65,7 +64,7 @@ class GoogleDriveUploader:
         from google.auth.transport.requests import Request
         from googleapiclient.discovery import build
 
-        SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+        SCOPES = ["https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
         creds = None
         repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         token_path = os.path.join(repo_root, "token.json")
@@ -73,12 +72,21 @@ class GoogleDriveUploader:
             creds = Credentials.from_authorized_user_file(token_path, SCOPES)
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
+                try:
+                    creds.refresh(Request())
+                except Exception as re:
+                    logger.error(f"Failed to refresh Google Drive token: {re}")
+                    if os.environ.get("GITHUB_ACTIONS"):
+                        raise RuntimeError("Headless environment: Cannot refresh expired Google Drive token. Please re-run token generator.")
             else:
+                if os.environ.get("GITHUB_ACTIONS"):
+                    raise RuntimeError("Headless environment: Missing Google Drive credentials token.json.")
                 flow = InstalledAppFlow.from_client_secrets_file(self.credentials_path, SCOPES)
                 creds = flow.run_local_server(port=0)
-            with open(token_path, "w") as token:
-                token.write(creds.to_json())
+            # Only write back if it's local run or token refreshed successfully
+            if creds and creds.valid:
+                with open(token_path, "w") as token:
+                    token.write(creds.to_json())
         return build("drive", "v3", credentials=creds)
 
     def _get_service(self):
