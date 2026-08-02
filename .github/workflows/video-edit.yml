@@ -35,11 +35,11 @@ on:
       - 'assets/videos/**'
 
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: '0 * * * *'
 
 permissions:
-  contents: read
-  actions: read
+  contents: write
+  actions: write
 
 env:
   PYTHON_VERSION: '3.11'
@@ -87,34 +87,25 @@ jobs:
           python -c "from PIL import Image; print('Pillow OK')"
           echo "All dependencies verified"
 
-      - name: Download input (if URL provided)
-        if: github.event.inputs.video_url != ''
+      - name: Recreate credentials files from secrets
+        env:
+          GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS_JSON }}
+          GOOGLE_DRIVE_TOKEN: ${{ secrets.GOOGLE_DRIVE_TOKEN_JSON }}
         run: |
-          mkdir -p assets/videos
-          python -c "
-          from python.processors.video_analyzer import VideoDownloader
-          d = VideoDownloader()
-          d.download_video('${{ github.event.inputs.video_url }}', 'assets/videos')
-          "
+          if [ -n "$GOOGLE_DRIVE_CREDENTIALS" ]; then
+            echo "$GOOGLE_DRIVE_CREDENTIALS" > credentials.json
+          fi
+          if [ -n "$GOOGLE_DRIVE_TOKEN" ]; then
+            echo "$GOOGLE_DRIVE_TOKEN" > token.json
+          fi
 
-      - name: Process videos
+      - name: Run Multi-Agent Automated Workflow Agent
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          python -m python.main \
-            --input assets/videos/ \
-            --output output/ \
-            --platform ${{ env.PLATFORM }} \
-            --batch
-
-      - name: Generate report
-        if: always()
-        run: |
-          python -c "
-          import os, json, glob
-          from python.processors.reporter import ReportGenerator
-          r = ReportGenerator('reports')
-          files = glob.glob('output/**/*.mp4', recursive=True)
-          print(f'Generated {len(files)} video(s)')
-          "
+          # Fetch next topic from google sheet / local tracker queue and process it
+          # For automation default runs, we execute the main compiler.
+          python python/workflow_agent.py --topic "Baseball Funny Fails" --upload --folder-id "1ZA6V3HpKy4yIdZ-8ns8pTvNNwU5zVrcS"
 
       - name: Upload video outputs
         uses: actions/upload-artifact@v4
@@ -124,26 +115,8 @@ jobs:
           path: output/
           retention-days: 7
 
-      - name: Upload reports
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: reports-${{ github.run_number }}
-          path: reports/
-          retention-days: 30
-
       - name: Cleanup
         if: always()
         run: |
-          rm -rf temp/
+          rm -f credentials.json token.json
           echo "Cleanup complete"
-
-  batch-process:
-    name: Batch Process (if many videos)
-    needs: process
-    if: always()
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - name: Check for additional work
-        run: echo "Batch processing complete"

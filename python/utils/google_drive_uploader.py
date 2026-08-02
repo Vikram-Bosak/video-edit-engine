@@ -55,7 +55,7 @@ class GoogleDriveUploader:
             from googleapiclient.http import MediaFileUpload
 
             # Scopes required for uploading files
-            SCOPES = ['https://www.googleapis.com/auth/drive.file']
+            SCOPES = ['https://www.googleapis.com/auth/drive']
             creds = None
 
             token_path = 'token.json'
@@ -68,7 +68,7 @@ class GoogleDriveUploader:
                 else:
                     flow = InstalledAppFlow.from_client_secrets_file(self.credentials_path, SCOPES)
                     # Use local server to authenticate in browser
-                    creds = flow.run_local_server(port=0)
+                    creds = flow.run_local_server(port=8080, open_browser=False)
                 # Save credentials for next run
                 with open(token_path, 'w') as token:
                     token.write(creds.to_json())
