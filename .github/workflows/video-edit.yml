@@ -1,4 +1,4 @@
-name: AI Video Edit Engine
+name: Aura shours Video eddit agents
 
 on:
   workflow_dispatch:
