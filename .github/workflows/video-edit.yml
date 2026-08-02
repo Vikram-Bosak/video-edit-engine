@@ -74,27 +74,19 @@ on:
       - '.github/workflows/video-edit.yml'
 
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 * * * *'
 
 permissions:
-  contents: read
-  actions: read
+  contents: write
+  actions: write
 
 env:
   PYTHON_VERSION: '3.11'
-  PLATFORM: ${{ github.event.inputs.platform || 'youtube_short' }}
-  QUALITY: ${{ github.event.inputs.quality || 'high' }}
-  TOPIC: ${{ github.event.inputs.topic || 'funny fails compilation' }}
-  NUM_CLIPS: ${{ github.event.inputs.num_clips || '6' }}
-  ENABLE_VOICEOVER: ${{ github.event.inputs.enable_voiceover || 'true' }}
-  ENABLE_OVERLAY: ${{ github.event.inputs.enable_character_overlay || 'true' }}
-  INPUT_DIR: assets/videos
   OUTPUT_DIR: output
-  REPORT_DIR: reports
 
 jobs:
   ranking-compilation:
-    name: Ranking Compilation (${{ env.TOPIC }})
+    name: Ranking Compilation (Hourly Automated Multi-Agent)
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -130,7 +122,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install yt-dlp gTTS feedparser google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client --quiet
+          pip install yt-dlp gTTS feedparser google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client opencv-python numpy Pillow --quiet
 
       - name: Verify installations
         run: |
@@ -138,48 +130,35 @@ jobs:
           ffprobe -version | head -1
           yt-dlp --version
           python -c "import cv2; print(f'OpenCV {cv2.__version__}')"
-          python -c "import numpy; print(f'NumPy {numpy.__version__}')"
-          echo "All dependencies verified"
 
-      - name: Run ranking compilation workflow
-        id: ranking
+      - name: Recreate credentials files from secrets
+        env:
+          GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS_JSON }}
+          GOOGLE_DRIVE_TOKEN: ${{ secrets.GOOGLE_DRIVE_TOKEN_JSON }}
         run: |
-          mkdir -p ${{ env.OUTPUT_DIR }} ${{ env.REPORT_DIR }} ${{ env.INPUT_DIR }}
-          python -m python.ranking_compilation_workflow \
-            --query "${{ env.TOPIC }}" \
-            --output "${{ env.OUTPUT_DIR }}/ranking_compilation.mp4" \
-            --clips ${{ env.NUM_CLIPS }} \
-            --json-result "${{ env.REPORT_DIR }}/workflow_result.json" \
-            $( [ "${{ env.ENABLE_VOICEOVER }}" = "false" ] && echo "--no-voiceover" ) \
-            $( [ "${{ env.ENABLE_OVERLAY }}" = "false" ] && echo "--no-overlay" )
-
-      - name: Display workflow result
-        if: always()
-        run: |
-          if [ -f "${{ env.REPORT_DIR }}/workflow_result.json" ]; then
-            cat "${{ env.REPORT_DIR }}/workflow_result.json"
+          if [ -n "$GOOGLE_DRIVE_CREDENTIALS" ]; then
+            echo "$GOOGLE_DRIVE_CREDENTIALS" > credentials.json
           fi
+          if [ -n "$GOOGLE_DRIVE_TOKEN" ]; then
+            echo "$GOOGLE_DRIVE_TOKEN" > token.json
+          fi
+
+      - name: Run Multi-Agent Automated Workflow Agent
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          python python/workflow_agent.py --topic "Baseball Funny Fails" --upload --folder-id "1ZA6V3HpKy4yIdZ-8ns8pTvNNwU5zVrcS"
 
       - name: Upload video outputs
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ranking-videos-${{ github.run_number }}
+          name: edited-videos-${{ github.run_number }}
           path: ${{ env.OUTPUT_DIR }}/
           retention-days: 7
-          if-no-files-found: warn
-
-      - name: Upload reports
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: reports-${{ github.run_number }}
-          path: ${{ env.REPORT_DIR }}/
-          retention-days: 30
-          if-no-files-found: warn
 
       - name: Cleanup
         if: always()
         run: |
-          rm -rf temp/
+          rm -f credentials.json token.json
           echo "Cleanup complete"
