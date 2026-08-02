@@ -4,68 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       topic:
-        description: 'Topic to create ranking video (e.g. "high jump fails", "funny basketball")'
+        description: 'Topic for compilation (Set custom name or default to SHEET queue)'
         required: true
+        default: 'SHEET'
         type: string
-      video_url:
-        description: 'Specific video URL (optional - skip topic search)'
-        required: false
-        type: string
-      num_clips:
-        description: 'Number of clips (6 for 6→1 countdown)'
-        required: false
-        default: '6'
-        type: choice
-        options:
-          - '5'
-          - '6'
-          - '8'
-      platform:
-        description: 'Target platform'
-        required: true
-        default: 'youtube_short'
-        type: choice
-        options:
-          - tiktok
-          - youtube_short
-          - facebook_reel
-          - instagram_reel
-          - twitter_video
-      quality:
-        description: 'Quality preset'
-        required: false
-        default: 'high'
-        type: choice
-        options:
-          - low
-          - medium
-          - high
-          - ultra
-      enable_voiceover:
-        description: 'Add AI voiceover narration'
-        required: false
-        default: 'true'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
-      enable_character_overlay:
-        description: 'Add fox character overlay'
-        required: false
-        default: 'true'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
-      use_template:
-        description: 'Use editing template'
-        required: false
-        default: 'none'
-        type: choice
-        options:
-          - none
-          - cinematic
-          - fast_paced
 
   push:
     branches: [master, main]
@@ -147,7 +89,7 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          python python/workflow_agent.py --topic "Baseball Funny Fails" --upload --folder-id "1ZA6V3HpKy4yIdZ-8ns8pTvNNwU5zVrcS"
+          python python/workflow_agent.py --topic "${{ github.event.inputs.topic || 'SHEET' }}" --upload --folder-id "1ZA6V3HpKy4yIdZ-8ns8pTvNNwU5zVrcS"
 
       - name: Upload video outputs
         uses: actions/upload-artifact@v4
