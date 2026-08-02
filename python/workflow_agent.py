@@ -736,9 +736,10 @@ def main():
     subprocess.run(cmd_beep, check=True)
     
     # Generate vertical colorbar transition video matching vertical short resolution (1080x1920) - set stereo layout (-ac 2)
+    colorbars_path = os.path.join(repo_root, "colorbars.png")
     cmd_tv = [
         "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-        "-loop", "1", "-i", r"C:\Users\admin\.gemini\antigravity-ide\scratch\video-edit-engine\colorbars.png",
+        "-loop", "1", "-i", colorbars_path,
         "-i", beep_wav,
         "-c:v", "libx264", "-preset", "ultrafast",
         "-t", "0.040", "-r", "30",
