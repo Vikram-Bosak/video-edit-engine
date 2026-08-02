@@ -77,12 +77,16 @@ jobs:
         env:
           GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS_JSON }}
           GOOGLE_DRIVE_TOKEN: ${{ secrets.GOOGLE_DRIVE_TOKEN_JSON }}
+          YOUTUBE_COOKIES: ${{ secrets.YOUTUBE_COOKIES }}
         run: |
           if [ -n "$GOOGLE_DRIVE_CREDENTIALS" ]; then
             echo "$GOOGLE_DRIVE_CREDENTIALS" > credentials.json
           fi
           if [ -n "$GOOGLE_DRIVE_TOKEN" ]; then
             echo "$GOOGLE_DRIVE_TOKEN" > token.json
+          fi
+          if [ -n "$YOUTUBE_COOKIES" ]; then
+            echo "$YOUTUBE_COOKIES" > cookies.txt
           fi
 
       - name: Run Multi-Agent Automated Workflow Agent
@@ -102,5 +106,5 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          rm -f credentials.json token.json
+          rm -f credentials.json token.json cookies.txt
           echo "Cleanup complete"
