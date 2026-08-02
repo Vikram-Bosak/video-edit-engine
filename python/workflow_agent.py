@@ -428,7 +428,7 @@ def edit_moment_segment(
 def main():
     start = time.time()
     parser = argparse.ArgumentParser(description="Multi-Agent Ranking Shorts Creator")
-    parser.add_argument("--topic", "-t", default="High Jump", help="Topic for compilation")
+    parser.add_argument("--topic", "-t", default="SHEET", help="Topic for compilation (Set 'SHEET' to fetch dynamically from Google Sheet)")
     parser.add_argument("--output", "-o", default=None, help="Output path")
     parser.add_argument("--folder-id", "-f", default=None, help="Google Drive Destination Folder ID")
     parser.add_argument("--upload", action="store_true", help="Enable Google Drive upload step")
@@ -439,8 +439,42 @@ def main():
     folder_id = args.folder_id
     upload_enabled = args.upload
     
+    # Google Sheet Integration variables
+    spreadsheet_id = "1Y92fHv3jP3G-WDkVdrQaR_inrdPIoOj6PlTc0uPMLYg"
+    sheet_row_index = None
+    
+    if topic == "SHEET":
+        logger.info("Attempting to fetch topic dynamically from Google Sheet...")
+        try:
+            from google.oauth2.credentials import Credentials
+            from googleapiclient.discovery import build
+            token_path = "token.json"
+            if os.path.exists(token_path):
+                creds = Credentials.from_authorized_user_file(token_path)
+                service = build('sheets', 'v4', credentials=creds)
+                # Fetch first 100 rows
+                result = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range='Sheet1!A1:B100').execute()
+                rows = result.get('values', [])
+                
+                # Search for first topic with empty status (index 1 is status)
+                for idx, row in enumerate(rows):
+                    if idx == 0: # skip header
+                        continue
+                    # If row has no status or status is empty
+                    if len(row) < 2 or not row[1] or row[1].strip() == "":
+                        topic = row[0]
+                        sheet_row_index = idx + 1 # 1-based index matching sheets row
+                        logger.info(f"Dynamic sheet topic found at row {sheet_row_index}: '{topic}'")
+                        break
+            if topic == "SHEET":
+                logger.warning("No pending topics found in Google Sheet. Defaulting to fallback topic.")
+                topic = "High Jump Fails"
+        except Exception as se:
+            logger.warning(f"Google Sheet topic fetch failed: {se}. Defaulting to fallback topic.")
+            topic = "High Jump Fails"
+
     if not output_path:
-        safe_name = topic.lower().replace(" ", "_")
+        safe_name = topic.lower().replace(" ", "_").replace("!", "").replace("?", "")
         output_path = rf"C:\Users\admin\.gemini\antigravity-ide\scratch\video-edit-engine\output\{safe_name}_ranking_shorts.mp4"
         
     logger.info(f"=== AGENT RUN: TOPIC = '{topic}' ===")
@@ -776,15 +810,40 @@ def main():
                 )
             }
             try:
+                headers = {
+                    "Content-Type": "application/json",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                }
                 req = urllib.request.Request(
                     discord_webhook_url,
                     data=json.dumps(report).encode("utf-8"),
-                    headers={"Content-Type": "application/json"}
+                    headers=headers
                 )
                 with urllib.request.urlopen(req) as resp:
                     logger.info("Discord notification sent successfully.")
             except Exception as de:
                 logger.warning(f"Could not send Discord report: {de}")
+                
+        # Update sheet status to Completed
+        if sheet_row_index:
+            try:
+                from google.oauth2.credentials import Credentials
+                from googleapiclient.discovery import build
+                token_path = "token.json"
+                if os.path.exists(token_path):
+                    creds = Credentials.from_authorized_user_file(token_path)
+                    service = build('sheets', 'v4', credentials=creds)
+                    body = {'values': [['Completed']]}
+                    # Status is in column B of the current row index
+                    service.spreadsheets().values().update(
+                        spreadsheetId=spreadsheet_id,
+                        range=f"Sheet1!B{sheet_row_index}",
+                        valueInputOption="RAW",
+                        body=body
+                    ).execute()
+                    logger.info(f"Marked topic row {sheet_row_index} as 'Completed' in Google Sheet.")
+            except Exception as se:
+                logger.warning(f"Could not update Google Sheet status: {se}")
     else:
         logger.error("Failed to compile final video.")
 
