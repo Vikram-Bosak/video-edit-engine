@@ -93,7 +93,10 @@ class CharacterOverlayEngine:
             "-map", "[outv]",
             "-map", "0:a?",
             "-c:v", "libx264", "-preset", "fast", "-crf", "18",
-            "-c:a", "aac",
+            "-pix_fmt", "yuv420p",
+            "-profile:v", "high",
+            "-level", "4.1",
+            "-c:a", "aac", "-ac", "2",
             output_path
         ]
         
