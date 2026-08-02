@@ -24,8 +24,8 @@ class GoogleDriveUploader:
     """Manages file uploads to Google Drive."""
 
     def __init__(self, credentials_path: Optional[str] = None):
-        # Determine repository root dynamically
-        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # Determine repository root dynamically (go up 3 levels from python/utils/google_drive_uploader.py)
+        repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self.credentials_path = credentials_path or os.environ.get(
             "GOOGLE_DRIVE_CREDENTIALS_PATH", os.path.join(repo_root, "credentials.json")
         )
@@ -57,6 +57,7 @@ class GoogleDriveUploader:
         scopes = ["https://www.googleapis.com/auth/drive.file"]
         creds = service_account.Credentials.from_service_account_info(info, scopes=scopes)
         return build("drive", "v3", credentials=creds)
+
     def _get_oauth_creds(self):
         """Build OAuth credentials from credentials.json + token.json."""
         from google.oauth2.credentials import Credentials
@@ -66,7 +67,7 @@ class GoogleDriveUploader:
 
         SCOPES = ["https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
         creds = None
-        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         token_path = os.path.join(repo_root, "token.json")
         if os.path.exists(token_path):
             creds = Credentials.from_authorized_user_file(token_path, SCOPES)
