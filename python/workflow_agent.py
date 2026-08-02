@@ -142,6 +142,10 @@ def trim_and_format_clip(input_path: str, output_path: str, duration: float = 6.
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 gray_small = cv2.resize(gray, (80, 60))
                 
+                # Delete large frames immediately to free RAM
+                del frame
+                del gray
+                
                 if prev_gray is not None:
                     diff = cv2.absdiff(gray_small, prev_gray)
                     # Surprise factor is high variance of pixel diffs (unexpected objects or transitions)
@@ -149,6 +153,8 @@ def trim_and_format_clip(input_path: str, output_path: str, duration: float = 6.
                 prev_gray = gray_small
                 
             cap.release()
+            import gc
+            gc.collect()
         else:
             cap.release()
             
@@ -480,9 +486,12 @@ def main():
             logger.warning(f"Google Sheet topic fetch failed: {se}. Defaulting to fallback topic.")
             topic = "High Jump Fails"
 
+    # Determine repository root directory
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
     if not output_path:
         safe_name = topic.lower().replace(" ", "_").replace("!", "").replace("?", "")
-        output_path = rf"C:\Users\admin\.gemini\antigravity-ide\scratch\video-edit-engine\output\{safe_name}_ranking_shorts.mp4"
+        output_path = os.path.join(repo_root, "output", f"{safe_name}_ranking_shorts.mp4")
         
     logger.info(f"=== AGENT RUN: TOPIC = '{topic}' ===")
     
@@ -490,7 +499,7 @@ def main():
     
     candidates_limit = 8
     # Read exactly from local directory if topic matches minecraft and it is populated
-    local_coca_dir = r"C:\Users\admin\.gemini\antigravity-ide\scratch\video-edit-engine\raw_coca_cola_videos"
+    local_coca_dir = os.path.join(repo_root, "raw_coca_cola_videos")
     files_in_local = [os.path.join(local_coca_dir, f) for f in os.listdir(local_coca_dir) if f.startswith("raw_video_") and f.endswith(".mp4")] if os.path.exists(local_coca_dir) else []
     
     if len(files_in_local) >= 5 and ("minecraft" in topic.lower() or "redstone" in topic.lower()):
@@ -772,7 +781,7 @@ def main():
     # Overlay character
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     overlay_engine = CharacterOverlayEngine()
-    fox_avatar = r"C:\Users\admin\.gemini\antigravity-ide\scratch\video-edit-engine\assets\logos\fox_observer.png"
+    fox_avatar = os.path.join(repo_root, "assets", "logos", "fox_observer.png")
     
     success = overlay_engine.overlay_avatar(
         video_path=raw_concat_path,
