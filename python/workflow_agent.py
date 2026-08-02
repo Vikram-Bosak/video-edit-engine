@@ -74,15 +74,22 @@ def download_topic_videos(topic: str, download_dir: str, limit: int = 5) -> List
             # yt-dlp returns status 101 when aborting due to max-downloads, which is normal behavior
             logger.info(f"yt-dlp query execution finished or matched constraints for: {query}")
             
-        # Count and rename files to standard raw_video_1.mp4 format
+        # Count and rename files to standard raw_video_1_ID.mp4 format to preserve video ID metadata
         downloaded_files = [os.path.join(download_dir, f) for f in os.listdir(download_dir) if f.endswith(".mp4") and not f.startswith("raw_video_") and not f.startswith("trimmed_") and not f.startswith("edited_moment_")]
         for p in downloaded_files:
+            # Extract video ID from downloaded filename (format is raw_video_X_ID.mp4)
+            base = os.path.basename(p)
+            vid_id = ""
+            if "_" in base:
+                parts = base.replace(".mp4", "").split("_")
+                # The last part or parts after raw_video_X is the ID
+                if len(parts) >= 4:
+                    vid_id = "_" + parts[-1]
             downloaded_count = len([f for f in os.listdir(download_dir) if f.startswith("raw_video_") and f.endswith(".mp4")])
-            dest = os.path.join(download_dir, f"raw_video_{downloaded_count + 1}.mp4")
+            dest = os.path.join(download_dir, f"raw_video_{downloaded_count + 1}{vid_id}.mp4")
             os.rename(p, dest)
             
         files = [os.path.join(download_dir, f) for f in os.listdir(download_dir) if f.startswith("raw_video_") and f.endswith(".mp4")]
-        downloaded_count = len(files)
         downloaded_count = len(files)
         
     # Try Nitter Scraper fallback next if we don't have enough clips
@@ -794,6 +801,62 @@ def main():
             uploader = GoogleDriveUploader(credentials_path="credentials.json")
             drive_link = uploader.upload_file(output_path, folder_id=folder_id)
             
+        # Build detailed Source Videos Report
+        import cv2
+        import datetime
+        source_report_lines = []
+        raw_files = [f for f in os.listdir(temp_dir) if f.startswith("raw_video_") and f.endswith(".mp4")]
+        
+        for idx, filename in enumerate(sorted(raw_files)):
+            filepath = os.path.join(temp_dir, filename)
+            # Reconstruct original source URL from filename ID
+            # File structure is raw_video_X_ID.mp4
+            parts = filename.replace(".mp4", "").split("_")
+            source_url = "N/A"
+            platform = "YouTube"
+            
+            if len(parts) >= 4:
+                vid_id = parts[-1]
+                # If it's a Twitter/Nitter ID (usually numbers or long hashes), we note it
+                if len(vid_id) == 11: # standard YouTube video ID length
+                    source_url = f"https://youtube.com/watch?v={vid_id}"
+                else:
+                    source_url = f"https://x.com/status/{vid_id}"
+                    platform = "X (Twitter)"
+                    
+            try:
+                cap_raw = cv2.VideoCapture(filepath)
+                r_fps = cap_raw.get(cv2.CAP_PROP_FPS) or 30.0
+                r_frames = int(cap_raw.get(cv2.CAP_PROP_FRAME_COUNT))
+                r_duration = r_frames / r_fps
+                cap_raw.release()
+            except Exception:
+                r_duration = 0.0
+                
+            source_report_lines.append(
+                f"{idx + 1}. **{platform}**\n"
+                f"   - Source URL: {source_url}\n"
+                f"   - Duration: `{r_duration:.1f}s`"
+            )
+            
+        source_videos_md = "\n".join(source_report_lines)
+        
+        # Calculate timing metrics
+        start_time_str = datetime.datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S')
+        end_time_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        proc_min = int(processing_time // 60)
+        proc_sec = int(processing_time % 60)
+        processing_time_str = f"{proc_min:02d} मिनट {proc_sec:02d} सेकंड"
+        
+        drive_link = "Upload Disabled"
+        drive_status = "❌ Failed"
+        if upload_enabled:
+            logger.info("Uploading final video to Google Drive...")
+            uploader = GoogleDriveUploader(credentials_path="credentials.json")
+            drive_link = uploader.upload_file(output_path, folder_id=folder_id)
+            if drive_link and "drive.google.com" in drive_link:
+                drive_status = "✅ Working"
+            
         # Send Discord Notification Report
         discord_webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
         if discord_webhook_url:
@@ -801,12 +864,22 @@ def main():
             import urllib.request
             report = {
                 "content": (
-                    f"**📢 AI MULTI-AGENT REPORT: Video Compilation Ready!**\n"
-                    f"✅ **Topic:** `{topic}`\n"
-                    f"✅ **Processing Time:** `{processing_time:.2f}s`\n"
-                    f"✅ **Video Duration:** `{video_duration:.2f}s`\n"
-                    f"✅ **Export Status:** `SUCCESS` (HD 1080x1920)\n"
-                    f"🔗 **Download Link:** {drive_link if drive_link else 'Pending share permissions'}"
+                    f"**📢 AI MULTI-AGENT REPORT: Video Compilation Ready!**\n\n"
+                    f"**Topic:** `{topic}`\n\n"
+                    f"**Downloaded Videos:**\n{source_videos_md}\n\n"
+                    f"**Final Video Status:** ✅ Export Successful\n"
+                    f"   - Duration: `{video_duration:.1f}s`\n"
+                    f"   - Resolution: `1080x1920`\n"
+                    f"   - Export Status: `SUCCESS`\n\n"
+                    f"**Google Drive Public URL (Final Video):**\n"
+                    f"   - Link: {drive_link if drive_link else 'Pending share permissions'}\n"
+                    f"   - Status: {drive_status}\n\n"
+                    f"**Workflow Report:**\n"
+                    f"   - Workflow ID: `{os.environ.get('GITHUB_RUN_ID', 'Local Run')}`\n"
+                    f"   - Start Time: `{start_time_str}`\n"
+                    f"   - End Time: `{end_time_str}`\n"
+                    f"   - Processing Time: `{processing_time_str}`\n"
+                    f"   - Workflow Status: ✅ Completed Successfully"
                 )
             }
             try:
