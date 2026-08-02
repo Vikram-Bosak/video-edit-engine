@@ -63,10 +63,17 @@ def download_topic_videos(topic: str, download_dir: str, limit: int = 5) -> List
             "--match-filter", "duration < 240", # Loosen matching to prevent skipping when views/likes are null
             search_query
         ]
+        # Resolve cookies_path dynamically
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        cookies_path = os.path.join(repo_root, "cookies.txt")
+        
         if os.path.exists(cookies_path):
             cmd.extend(["--cookies", cookies_path])
-        else:
-            cmd.extend(["--cookies-from-browser", "chrome"])
+        elif os.name == 'nt': # On local Windows where Chrome is present
+            try:
+                cmd.extend(["--cookies-from-browser", "chrome"])
+            except Exception:
+                pass
             
         try:
             subprocess.run(cmd, check=True, timeout=120)
@@ -456,12 +463,15 @@ def main():
     spreadsheet_id = "1Y92fHv3jP3G-WDkVdrQaR_inrdPIoOj6PlTc0uPMLYg"
     sheet_row_index = None
     
+    # Determine repository root directory
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
     if topic == "SHEET":
         logger.info("Attempting to fetch topic dynamically from Google Sheet...")
         try:
             from google.oauth2.credentials import Credentials
             from googleapiclient.discovery import build
-            token_path = "token.json"
+            token_path = os.path.join(repo_root, "token.json")
             if os.path.exists(token_path):
                 creds = Credentials.from_authorized_user_file(token_path)
                 service = build('sheets', 'v4', credentials=creds)
@@ -485,9 +495,6 @@ def main():
         except Exception as se:
             logger.warning(f"Google Sheet topic fetch failed: {se}. Defaulting to fallback topic.")
             topic = "High Jump Fails"
-
-    # Determine repository root directory
-    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     if not output_path:
         safe_name = topic.lower().replace(" ", "_").replace("!", "").replace("?", "")
