@@ -879,6 +879,8 @@ def main():
         if discord_webhook_url:
             import json
             import urllib.request
+            run_id = os.environ.get('GITHUB_RUN_ID')
+            run_link_md = f"[Actions Run #{run_id}](https://github.com/Vikram-Bosak/video-edit-engine/actions/runs/{run_id})" if run_id else "`Local Run`"
             report = {
                 "content": (
                     f"**📢 AI MULTI-AGENT REPORT: Video Compilation Ready!**\n\n"
@@ -892,7 +894,8 @@ def main():
                     f"   - Link: {drive_link if drive_link else 'Pending share permissions'}\n"
                     f"   - Status: {drive_status}\n\n"
                     f"**Workflow Report:**\n"
-                    f"   - Workflow ID: `{os.environ.get('GITHUB_RUN_ID', 'Local Run')}`\n"
+                    f"   - GitHub Repository: [Vikram-Bosak/video-edit-engine](https://github.com/Vikram-Bosak/video-edit-engine)\n"
+                    f"   - Workflow Run Link: {run_link_md}\n"
                     f"   - Start Time: `{start_time_str}`\n"
                     f"   - End Time: `{end_time_str}`\n"
                     f"   - Processing Time: `{processing_time_str}`\n"
