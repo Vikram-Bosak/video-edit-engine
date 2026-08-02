@@ -24,8 +24,10 @@ class GoogleDriveUploader:
     """Manages file uploads to Google Drive."""
 
     def __init__(self, credentials_path: Optional[str] = None):
+        # Determine repository root dynamically
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.credentials_path = credentials_path or os.environ.get(
-            "GOOGLE_DRIVE_CREDENTIALS_PATH", "credentials.json"
+            "GOOGLE_DRIVE_CREDENTIALS_PATH", os.path.join(repo_root, "credentials.json")
         )
 
     def _get_service_account_creds(self):
@@ -65,7 +67,8 @@ class GoogleDriveUploader:
 
         SCOPES = ["https://www.googleapis.com/auth/drive.file"]
         creds = None
-        token_path = "token.json"
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        token_path = os.path.join(repo_root, "token.json")
         if os.path.exists(token_path):
             creds = Credentials.from_authorized_user_file(token_path, SCOPES)
         if not creds or not creds.valid:
