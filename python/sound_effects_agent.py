@@ -265,7 +265,7 @@ class SoundEffectsAgent:
             "-map", "0:v",
             "-map", "[out_a]",
             "-c:v", "copy",
-            "-c:a", "aac", "-b:a", "192k",
+            "-c:a", "aac", "-b:a", "192k", "-ar", "44100", "-ac", "2",
             output_path
         ])
         

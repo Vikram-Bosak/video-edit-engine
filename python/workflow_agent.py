@@ -479,7 +479,7 @@ def edit_moment_segment(
             "-map", "0:v",
             "-map", "[out_a]",
             "-c:v", "libx264", "-pix_fmt", "yuv420p",
-            "-c:a", "aac",
+            "-c:a", "aac", "-b:a", "192k", "-ar", "44100", "-ac", "2",
             "-shortest", # Ensure the output stops exactly when the video stream ends, preventing a frozen frame
             output_path
         ]
@@ -502,7 +502,7 @@ def edit_moment_segment(
         "-map", "0:v",
         "-map", "[out_a]",
         "-c:v", "libx264", "-pix_fmt", "yuv420p",
-        "-c:a", "aac",
+        "-c:a", "aac", "-b:a", "192k", "-ar", "44100", "-ac", "2",
         "-shortest",
         output_path
     ]
@@ -802,7 +802,7 @@ def main():
     cmd_beep = [
         "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
         "-f", "lavfi", "-i", "sine=frequency=1000:duration=0.040",
-        "-ac", "2", "-c:a", "pcm_s16le", beep_wav
+        "-ac", "2", "-ar", "44100", "-c:a", "pcm_s16le", beep_wav
     ]
     subprocess.run(cmd_beep, check=True)
     
@@ -815,7 +815,7 @@ def main():
         "-c:v", "libx264", "-preset", "ultrafast",
         "-t", "0.040", "-r", "30",
         "-pix_fmt", "yuv420p",
-        "-c:a", "aac", "-b:a", "192k", "-ac", "2",
+        "-c:a", "aac", "-b:a", "192k", "-ac", "2", "-ar", "44100",
         tv_transition
     ]
     subprocess.run(cmd_tv, check=True)
