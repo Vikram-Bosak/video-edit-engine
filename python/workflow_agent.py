@@ -120,6 +120,71 @@ def download_topic_videos(topic: str, download_dir: str, limit: int = 5) -> List
         
     return sorted(files)
 
+def calculate_smart_crop_x(video_path: str, start_time: float, duration: float, target_width: int = 1080, target_height: int = 1920) -> int:
+    """
+    Analyzes the video frames around the climax to find the horizontal centroid of motion (cx).
+    Returns the optimal crop X coordinate to keep the action centered.
+    """
+    import cv2
+    import numpy as np
+    
+    cap = cv2.VideoCapture(video_path)
+    orig_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    orig_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    
+    # Scale widescreen height to target_height (1920)
+    scale_factor = target_height / orig_h
+    scaled_w = int(orig_w * scale_factor)
+    
+    # We want to crop target_width (1080) from scaled_w
+    if scaled_w <= target_width:
+        cap.release()
+        return 0 # no crop adjustment possible
+        
+    start_frame = int(start_time * fps)
+    end_frame = int((start_time + duration) * fps)
+    cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+    
+    prev_gray = None
+    motion_cx_list = []
+    
+    f_idx = start_frame
+    while f_idx < end_frame:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        if f_idx % 3 != 0: # sample every 3 frames for speed
+            f_idx += 1
+            continue
+            
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray_small = cv2.resize(gray, (160, 90))
+        
+        if prev_gray is not None:
+            diff = cv2.absdiff(gray_small, prev_gray)
+            _, thresh = cv2.threshold(diff, 15, 255, cv2.THRESH_BINARY)
+            moments = cv2.moments(thresh)
+            if moments["m00"] > 0:
+                cx = int(moments["m10"] / moments["m00"])
+                orig_cx = int((cx / 160.0) * orig_w)
+                motion_cx_list.append(orig_cx)
+                
+        prev_gray = gray_small
+        f_idx += 1
+        
+    cap.release()
+    
+    if not motion_cx_list:
+        return (scaled_w - target_width) // 2
+        
+    avg_orig_cx = sum(motion_cx_list) / len(motion_cx_list)
+    scaled_cx = int(avg_orig_cx * scale_factor)
+    
+    crop_x = scaled_cx - (target_width // 2)
+    crop_x = max(0, min(scaled_w - target_width, crop_x))
+    return crop_x
+
 def trim_and_format_clip(input_path: str, output_path: str, duration: float = 6.5) -> bool:
     """
     AI Clip Analyzer: Locates the most engaging moment in the video by analyzing
@@ -155,7 +220,6 @@ def trim_and_format_clip(input_path: str, output_path: str, duration: float = 6.
                 
                 if prev_gray is not None:
                     diff = cv2.absdiff(gray_small, prev_gray)
-                    # Surprise factor is high variance of pixel diffs (unexpected objects or transitions)
                     motion_scores.append((f_idx / fps, float(diff.mean())))
                 prev_gray = gray_small
                 
@@ -165,26 +229,14 @@ def trim_and_format_clip(input_path: str, output_path: str, duration: float = 6.
         else:
             cap.release()
             
-        # 2. Audio Energy Peak Detection (Laughter, cheering, thud hits)
-        # Use ffmpeg to extract audio volume profile to find surprise/climax moments
+        # 2. Audio Energy Peak Detection
         audio_peaks = {}
         try:
-            # Run ffmpeg to output mean volume levels in 0.5 second intervals
-            audio_cmd = [
-                "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-                "-i", input_path,
-                "-af", "astats=metadata=1:reset=1",
-                "-f", "null", "-"
-            ]
-            # If astats is not available or errors out, default to baseline
-            # We can parse peaks using a quick ffmpeg volumedetect filter
             vol_cmd = [
                 "ffmpeg", "-i", input_path,
                 "-filter:a", "volumedetect",
                 "-f", "null", "-"
             ]
-            # Since parsing complex subprocess stderr is slow, we will use a robust fallback:
-            # We search for peaks by mapping optical flow/visual surprise first, which is highly reliable.
         except Exception:
             pass
 
@@ -197,10 +249,8 @@ def trim_and_format_clip(input_path: str, output_path: str, duration: float = 6.
             for start_sec, score in motion_scores:
                 if start_sec + window_size_sec > total_duration - 0.5:
                     continue
-                # Combine visual motion with a bias for peaks that happen in the middle of the clip
                 win_score = sum(s for t, s in motion_scores if start_sec <= t <= start_sec + window_size_sec)
                 
-                # Dynamic hook bias: prefer moments containing action transitions
                 if win_score > best_window_score:
                     best_window_score = win_score
                     best_start = start_sec
@@ -214,10 +264,28 @@ def trim_and_format_clip(input_path: str, output_path: str, duration: float = 6.
         logger.warning(f"AI Clip Analyzer failed for {input_path}: {e}. Falling back to default offset.")
         start_time = 1.0
         
-    vf_filters = [
-        "scale=1080:1920:force_original_aspect_ratio=increase",
-        "crop=1080:1920"
-    ]
+    # Calculate scale dimensions dynamically for smart focus-tracking crop
+    try:
+        cap = cv2.VideoCapture(input_path)
+        orig_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        orig_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        cap.release()
+        
+        scale_factor = 1920.0 / orig_h
+        scaled_w = int(orig_w * scale_factor)
+        crop_x = calculate_smart_crop_x(input_path, start_time, duration)
+        
+        vf_filters = [
+            f"scale={scaled_w}:1920",
+            f"crop=1080:1920:{crop_x}:0"
+        ]
+        logger.info(f"AI Smart Crop: horizontal crop offset {crop_x}px calculated for tracking action.")
+    except Exception as e:
+        logger.warning(f"Failed to calculate smart crop: {e}. Falling back to default center crop.")
+        vf_filters = [
+            "scale=1080:1920:force_original_aspect_ratio=increase",
+            "crop=1080:1920"
+        ]
     # Set high quality rendering configurations: crf=18, high profile, level 4.1 for HD output
     cmd = [
         "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",

@@ -153,6 +153,74 @@ class SoundEffectsAgent:
         climax_time = max(start_time + 0.1, min(end_time - 0.1, climax_time))
         return climax_time
 
+    def analyze_scene_visuals(self, video_path: str, start_time: float, end_time: float) -> str:
+        """
+        Analyzes the video frames in the given time window using OpenCV to detect:
+        - 'jump': upward movement
+        - 'fall': downward movement
+        - 'hit': sudden impact/collision (high motion spike)
+        - 'funny' / 'surprise': default
+        """
+        cap = cv2.VideoCapture(video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+        start_frame = int(start_time * fps)
+        end_frame = int(end_time * fps)
+        
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+        
+        prev_gray = None
+        motion_y_coords = []
+        motion_deltas = []
+        
+        f_idx = start_frame
+        while f_idx < end_frame:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray_small = cv2.resize(gray, (80, 60))
+            
+            if prev_gray is not None:
+                diff = cv2.absdiff(gray_small, prev_gray)
+                mean_diff = float(diff.mean())
+                motion_deltas.append(mean_diff)
+                
+                # Simple centroid of motion
+                _, thresh = cv2.threshold(diff, 15, 255, cv2.THRESH_BINARY)
+                moments = cv2.moments(thresh)
+                if moments["m00"] > 0:
+                    cy = int(moments["m01"] / moments["m00"])
+                    motion_y_coords.append(cy)
+                else:
+                    motion_y_coords.append(30)
+                    
+            prev_gray = gray_small
+            f_idx += 1
+            
+        cap.release()
+        
+        if not motion_deltas:
+            return ""
+            
+        # 1. Check for sudden collision/impact (high motion spike)
+        max_delta = max(motion_deltas)
+        avg_delta = sum(motion_deltas) / len(motion_deltas)
+        if max_delta > avg_delta * 3.5 and max_delta > 10.0:
+            return "hit"
+            
+        # 2. Check vertical direction profile
+        if len(motion_y_coords) > 5:
+            dy = np.diff(motion_y_coords)
+            upward_steps = sum(1 for step in dy if step < -1)
+            downward_steps = sum(1 for step in dy if step > 1)
+            
+            if upward_steps > downward_steps * 1.5:
+                return "jump"
+            elif downward_steps > upward_steps * 1.5:
+                return "fall"
+                
+        return ""
+
     def apply_sfx_to_video(self, video_path: str, output_path: str, rank_title: str) -> bool:
         """
         Analyzes the video for scene cuts, places whoosh sounds before cuts,
@@ -193,6 +261,14 @@ class SoundEffectsAgent:
             category = "cheer"
         elif any(w in combined_text for w in ("thud", "drop", "box", "slam")):
             category = "thud"
+            
+        # Run visual analysis on first segment to refine the SFX category
+        if segments:
+            seg_start, seg_end = segments[0]
+            visual_category = self.analyze_scene_visuals(video_path, seg_start, seg_end)
+            if visual_category:
+                logger.info(f"Visual Analysis classified segment action as '{visual_category}' (overriding title keyword '{category}')")
+                category = visual_category
             
         # Load style library from memory to sync pacing and offsets dynamically
         pacing = 1.75
@@ -266,6 +342,7 @@ class SoundEffectsAgent:
             "-map", "[out_a]",
             "-c:v", "copy",
             "-c:a", "aac", "-b:a", "192k", "-ar", "44100", "-ac", "2",
+            "-shortest",
             output_path
         ])
         
