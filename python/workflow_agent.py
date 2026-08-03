@@ -237,11 +237,72 @@ def trim_and_format_clip(input_path: str, output_path: str, duration: float = 6.
         logger.error(f"Failed to trim clip {input_path}: {e}")
         return False
 
+def has_audio_stream(file_path: str) -> bool:
+    """Checks if a video file has a valid audio track using ffprobe."""
+    cmd = [
+        "ffprobe", "-v", "quiet", "-show_entries", "stream=codec_type",
+        "-of", "csv=p=0", file_path
+    ]
+    try:
+        output = subprocess.check_output(cmd, text=True)
+        return "audio" in output
+    except Exception:
+        return False
+
+def get_or_download_bgm(workspace_root: str) -> str:
+    """Downloads a high-quality royalty-free instrumental BGM track if not cached."""
+    cache_dir = os.path.join(workspace_root, "sfx_cache")
+    os.makedirs(cache_dir, exist_ok=True)
+    target_path = os.path.join(cache_dir, "bgm_loop.mp3")
+    
+    if os.path.exists(target_path):
+        return target_path
+        
+    url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    logger.info(f"Downloading high-quality backing BGM track from: {url}")
+    try:
+        import urllib.request
+        req = urllib.request.Request(
+            url, 
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        )
+        with urllib.request.urlopen(req, timeout=30) as response:
+            with open(target_path, "wb") as f:
+                f.write(response.read())
+        logger.info(f"Successfully cached backing BGM track at: {target_path}")
+        return target_path
+    except Exception as e:
+        logger.warning(f"Failed to download BGM from {url}: {e}. Generating fallback synthetic music.")
+        return ""
+
 def generate_tone_bgm(output_path: str, freq: int, duration: float = 6.5) -> str:
+    """Generates BGM loop - slices from cached MP3 or falls back to synthetic tone if download failed."""
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    bgm_mp3 = get_or_download_bgm(repo_root)
+    
+    if bgm_mp3 and os.path.exists(bgm_mp3):
+        # Slice a portion of the MP3 based on the frequency to give each clip a different section
+        start_offsets = {261: 10, 293: 35, 329: 60, 349: 85, 392: 110}
+        offset = start_offsets.get(freq, 20)
+        
+        cmd = [
+            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+            "-ss", str(offset),
+            "-i", bgm_mp3,
+            "-t", str(duration),
+            "-af", "afade=t=in:st=0:d=0.5,afade=t=out:st=6.0:d=0.5,volume=0.4",
+            output_path
+        ]
+        try:
+            subprocess.run(cmd, check=True)
+            return output_path
+        except Exception as e:
+            logger.warning(f"Failed to slice BGM track: {e}. Generating synthetic tone fallback.")
+            
     cmd = [
         "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
         "-f", "lavfi", "-i", f"sine=frequency={freq}:duration={duration}",
-        "-af", "volume=0.15,tremolo=f=5:d=0.6",
+        "-af", "volume=0.08,tremolo=f=3:d=0.5,lowpass=f=400",
         "-t", str(duration),
         "-c:a", "pcm_s16le",
         output_path
@@ -250,10 +311,11 @@ def generate_tone_bgm(output_path: str, freq: int, duration: float = 6.5) -> str
     return output_path
 
 def generate_impact_sfx(output_path: str) -> str:
+    # Upgrade synthetic impact to be a low thud instead of high beep
     cmd = [
         "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-        "-f", "lavfi", "-i", "sine=frequency=220:duration=0.5",
-        "-af", "tremolo=f=12:d=0.7,volume=0.7",
+        "-f", "lavfi", "-i", "sine=frequency=80:duration=0.5",
+        "-af", "tremolo=f=8:d=0.5,volume=1.0,lowpass=f=200",
         "-t", "0.5",
         output_path
     ]
@@ -402,48 +464,50 @@ def edit_moment_segment(
     # Precise Timing Offset: Trigger SFX 100ms (0.1s) earlier for a natural sync
     delay_ms = int(max(0.0, ((clip_duration - 1.5) - 0.1) * 1000.0))
     
-    cmd_audio = [
-        "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-        "-i", visual_temp,
-        "-i", bgm_path,
-        "-i", impact_sfx_path,
-        "-i", clip_path, # Read original clip for original audio (Index 3)
-        "-filter_complex",
-        f"[1:a]volume=0.18[bgm_a];" # BGM at 18% Volume
-        f"[2:a]adelay={delay_ms}|{delay_ms},volume=0.70[impact_a];" # SFX at 70% Volume with 0.1s early sync
-        f"[3:a]volume=1.00[orig_a];" # Original Dialogue / Gameplay audio at 100% Volume
-        "[orig_a][bgm_a][impact_a]amix=inputs=3:duration=first[out_a]",
-        "-map", "0:v",
-        "-map", "[out_a]",
-        "-c:v", "libx264", "-pix_fmt", "yuv420p",
-        "-c:a", "aac",
-        "-shortest", # Ensure the output stops exactly when the video stream ends, preventing a frozen frame
-        output_path
-    ]
-    try:
-        subprocess.run(cmd_audio, check=True)
-        return True
-    except Exception as e:
-        logger.warning(f"Failed mixing with original audio for Moment #{moment_num}: {e}. Falling back to BGM/SFX only.")
-        # Fallback if original clip has no audio track
-        cmd_fallback = [
+    if has_audio_stream(clip_path):
+        cmd_audio = [
             "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
             "-i", visual_temp,
             "-i", bgm_path,
             "-i", impact_sfx_path,
+            "-i", clip_path, # Read original clip for original audio (Index 3)
             "-filter_complex",
-            f"[1:a]volume=0.18[bgm_a];"
-            f"[2:a]adelay={delay_ms}|{delay_ms},volume=0.70[impact_a];"
-            "[bgm_a][impact_a]amix=inputs=2:duration=first[out_a]",
+            f"[1:a]volume=0.18[bgm_a];" # BGM at 18% Volume
+            f"[2:a]adelay={delay_ms}|{delay_ms},volume=0.70[impact_a];" # SFX at 70% Volume with 0.1s early sync
+            f"[3:a]volume=1.00[orig_a];" # Original Dialogue / Gameplay audio at 100% Volume
+            "[orig_a][bgm_a][impact_a]amix=inputs=3:duration=first[out_a]",
             "-map", "0:v",
             "-map", "[out_a]",
             "-c:v", "libx264", "-pix_fmt", "yuv420p",
             "-c:a", "aac",
-            "-shortest",
+            "-shortest", # Ensure the output stops exactly when the video stream ends, preventing a frozen frame
             output_path
         ]
-        subprocess.run(cmd_fallback, check=True)
-        return True
+        try:
+            subprocess.run(cmd_audio, check=True)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed mixing with original audio for Moment #{moment_num}: {e}. Falling back to BGM/SFX only.")
+            
+    # Fallback if original clip has no audio track
+    cmd_fallback = [
+        "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+        "-i", visual_temp,
+        "-i", bgm_path,
+        "-i", impact_sfx_path,
+        "-filter_complex",
+        f"[1:a]volume=0.18[bgm_a];"
+        f"[2:a]adelay={delay_ms}|{delay_ms},volume=0.70[impact_a];"
+        "[bgm_a][impact_a]amix=inputs=2:duration=first[out_a]",
+        "-map", "0:v",
+        "-map", "[out_a]",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p",
+        "-c:a", "aac",
+        "-shortest",
+        output_path
+    ]
+    subprocess.run(cmd_fallback, check=True)
+    return True
 
 def main():
     start = time.time()

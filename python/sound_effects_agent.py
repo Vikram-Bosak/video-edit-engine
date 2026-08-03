@@ -68,15 +68,17 @@ class SoundEffectsAgent:
     def _generate_synthetic_sfx(self, category: str, output_path: str) -> str:
         """Generates a synthetic high-quality sound effect using FFmpeg sine/noise generator if download fails."""
         if category == "jump":
-            cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=200:duration=0.3", "-af", "asetrate=44100*1.5,atempo=1/1.5", output_path]
+            cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=180:duration=0.3", "-af", "asetrate=44100*1.5,atempo=1/1.5,volume=1.5", output_path]
         elif category in ("hit", "thud"):
-            cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=80:duration=0.25", "-af", "tremolo=f=20:d=0.9,volume=1.5", output_path]
+            # Mix a low sine frequency with a brown noise burst for a realistic drum kick/thud sound
+            cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "anoisesrc=d=0.2:c=brown", "-f", "lavfi", "-i", "sine=f=75:d=0.2", "-filter_complex", "[0:a]volume=1.5,lowpass=f=120[a0];[1:a]volume=1.8,afade=t=out:st=0.1:d=0.1[a1];[a0][a1]amix=inputs=2:duration=first", output_path]
         elif category == "explosion":
-            cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "anoisesrc=d=0.5:c=brown", "-af", "volume=1.2,afade=t=out:st=0.2:d=0.3", output_path]
+            cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "anoisesrc=d=0.6:c=brown", "-af", "volume=2.0,lowpass=f=150,afade=t=out:st=0.3:d=0.3", output_path]
         elif category == "whoosh":
-            cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "anoisesrc=d=0.6:c=white", "-af", "volume=1.2,apulsator=hz=1.5,afade=t=in:st=0:d=0.25,afade=t=out:st=0.35:d=0.25", output_path]
+            # Soft pink noise filtered around 600Hz for a realistic air swoosh sound
+            cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "anoisesrc=d=0.6:c=pink", "-af", "volume=2.5,bandpass=f=600:width=300,apulsator=hz=1.8,afade=t=in:st=0:d=0.25,afade=t=out:st=0.35:d=0.25", output_path]
         else:
-            cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=440:duration=0.15", "-af", "volume=0.8,afade=t=out:st=0.08:d=0.07", output_path]
+            cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=350:duration=0.15", "-af", "volume=0.8,afade=t=out:st=0.08:d=0.07", output_path]
 
         try:
             subprocess.run(cmd, check=True)
