@@ -39,7 +39,8 @@ class SoundEffectsAgent:
             "funny": "https://archive.org/download/classic-sfx/cartoon_laugh.wav",
             "cheer": "https://archive.org/download/classic-sfx/applause.wav",
             "thud": "https://archive.org/download/classic-sfx/thud.wav",
-            "whoosh": "https://archive.org/download/classic-sfx/whoosh.wav"
+            "whoosh": "https://archive.org/download/classic-sfx/whoosh.wav",
+            "pop": "https://archive.org/download/classic-sfx/pop.wav"
         }
 
     def _get_sfx_path(self, category: str) -> str:
@@ -193,23 +194,57 @@ class SoundEffectsAgent:
         elif any(w in combined_text for w in ("thud", "drop", "box", "slam")):
             category = "thud"
             
+        # Load style library from memory to sync pacing and offsets dynamically
+        pacing = 1.75
+        whoosh_offset = 0.09
+        memory_path = os.path.join(self.workspace_root, "memory", "project_memory.json")
+        if os.path.exists(memory_path):
+            try:
+                with open(memory_path) as f:
+                    mem_data = json.load(f)
+                    style_lib = mem_data.get("style_library", {})
+                    viral_style = style_lib.get("viral_shorts_master_style", {})
+                    pacing = viral_style.get("average_pacing", 1.75)
+                    whoosh_offset = viral_style.get("pre_cut_whoosh_delay", 0.09)
+            except Exception as e:
+                logger.warning(f"Could not load pacing from memory: {e}")
+
         # Collect SFX mapping: List of (sfx_file_path, delay_ms, volume)
         sfx_mappings = []
         
-        # Add whoosh before every cut
+        # Add whoosh before every cut using trained whoosh_offset
         whoosh_file = self._get_sfx_path("whoosh")
         for cut in cuts:
-            whoosh_delay = max(0.0, cut - 0.3)
-            sfx_mappings.append((whoosh_file, int(whoosh_delay * 1000.0), 0.75))
+            whoosh_delay = max(0.0, cut - whoosh_offset)
+            sfx_mappings.append((whoosh_file, int(whoosh_delay * 1000.0), 0.65))
             
         # Add impact/climax sound inside each segment
         action_file = self._get_sfx_path(category)
+        climax_times = []
         for seg_start, seg_end in segments:
             climax_t = self.find_segment_climax(video_path, seg_start, seg_end)
-            sfx_mappings.append((action_file, int(climax_t * 1000.0), 0.85))
+            sfx_mappings.append((action_file, int(climax_t * 1000.0), 0.80))
+            climax_times.append(climax_t)
+
+        # Add pacing pop beats synced to the trained style pacing (1.75s)
+        # Plays a subtle pluck sound simulating text popups/visual beats
+        t = pacing
+        pop_file = self._get_sfx_path("pop")
+        while t < duration - 0.3:
+            # Prevent overlap with transition whooshes or climax hits
+            overlap = False
+            for cut_t in cuts:
+                if abs(t - (cut_t - whoosh_offset)) < 0.25:
+                    overlap = True
+            for climax_t in climax_times:
+                if abs(t - climax_t) < 0.25:
+                    overlap = True
+                    
+            if not overlap:
+                sfx_mappings.append((pop_file, int(t * 1000.0), 0.25))
+            t += pacing
             
         if not sfx_mappings:
-            # Default fallback if no sfx mapped
             sfx_mappings.append((self._get_sfx_path("beep"), 500, 0.5))
 
         # Build FFmpeg command
