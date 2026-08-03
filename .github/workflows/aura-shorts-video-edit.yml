@@ -95,6 +95,14 @@ jobs:
         run: |
           python python/workflow_agent.py --topic "${{ github.event.inputs.topic || 'SHEET' }}" --upload --folder-id "1ZA6V3HpKy4yIdZ-8ns8pTvNNwU5zVrcS"
 
+      - name: Commit and push memory updates
+        if: success()
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add memory/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update edit engine memory [skip ci]" && git push)
+
       - name: Upload video outputs
         uses: actions/upload-artifact@v4
         if: always()

@@ -1,0 +1,46 @@
+{
+  "video_history": [
+    {
+      "timestamp": "2026-08-03T07:16:54.299690",
+      "topic": "gym",
+      "style": "sports",
+      "output_file": "gym_ranking_shorts.mp4",
+      "size_mb": 0.0,
+      "url": "https://drive.google.com/file/d/mock123"
+    }
+  ],
+  "style_library": {
+    "funny": {
+      "name": "Funny Zoom",
+      "views": 0,
+      "priority": "High",
+      "success_count": 0
+    },
+    "sports": {
+      "name": "Sports Cinematic",
+      "views": 0,
+      "priority": "Medium",
+      "success_count": 1
+    },
+    "meme": {
+      "name": "Fast Meme",
+      "views": 0,
+      "priority": "High",
+      "success_count": 0
+    },
+    "viral_shorts_master_style": {
+      "name": "Viral Shorts Master Style",
+      "average_pacing": 1.75,
+      "pre_cut_whoosh_delay": 0.09,
+      "success_count": 0,
+      "priority": "High"
+    }
+  },
+  "duplicate_hashes": [
+    "vid_mock_999"
+  ],
+  "settings": {
+    "default_transition": "tv_static",
+    "default_caption_style": "Pop"
+  }
+}

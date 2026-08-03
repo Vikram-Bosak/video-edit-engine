@@ -466,6 +466,10 @@ def main():
     # Determine repository root directory
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+    # Initialize Memory Agent
+    from python.memory_agent import MemoryAgent
+    memory_agent = MemoryAgent(workspace_root=repo_root)
+
     if topic == "SHEET":
         logger.info("Attempting to fetch topic dynamically from Google Sheet...")
         try:
@@ -501,6 +505,9 @@ def main():
         output_path = os.path.join(repo_root, "output", f"{safe_name}_ranking_shorts.mp4")
         
     logger.info(f"=== AGENT RUN: TOPIC = '{topic}' ===")
+    best_style_info = memory_agent.get_best_style(topic)
+    style_key = best_style_info["style_key"]
+    logger.info(f"Memory Agent recommended editing style: '{best_style_info['style_name']}'")
     
     temp_dir = tempfile.mkdtemp(prefix="agent_ranking_")
     
@@ -752,6 +759,10 @@ def main():
     # Add TV static transition at the very beginning (before first clip starts)
     edited_clips.append(tv_transition)
     
+    # Import Sound Effects Agent
+    from python.sound_effects_agent import SoundEffectsAgent
+    sfx_agent = SoundEffectsAgent(workspace_root=repo_root)
+
     processed_count = 0
     for i in range(5):
         moment_num = 5 - i
@@ -759,7 +770,16 @@ def main():
         bgm_track = bgm_tracks[i]
         
         if edit_moment_segment(trimmed_clips[i], out_edited_path, moment_num, bgm_track, impact_sfx, rank_titles, topic, temp_dir):
-            edited_clips.append(out_edited_path)
+            # Apply Sound Effects Agent to choose and apply synced sound effects dynamically
+            sfx_final_path = os.path.join(temp_dir, f"sfx_moment_{moment_num}.mp4")
+            rank_title = rank_titles[i]
+            logger.info(f"Triggering Sound Effects Agent for Moment #{moment_num} ('{rank_title}')...")
+            if sfx_agent.apply_sfx_to_video(out_edited_path, sfx_final_path, rank_title):
+                edited_clips.append(sfx_final_path)
+            else:
+                logger.warning(f"Sound Effects Agent failed for Moment #{moment_num}. Falling back to default edit segment.")
+                edited_clips.append(out_edited_path)
+                
             processed_count += 1
             # Add TV static transition after this clip (before next clip starts)
             if i < 4:
@@ -873,6 +893,24 @@ def main():
             drive_link = uploader.upload_file(output_path, folder_id=folder_id)
             if drive_link and "drive.google.com" in drive_link:
                 drive_status = "✅ Working"
+            
+        # Register execution stats in Memory Agent
+        try:
+            memory_agent.register_successful_run(
+                topic=topic,
+                style_key=style_key,
+                video_path=output_path,
+                url=drive_link
+            )
+            # Register video IDs in duplicate memory
+            for filename in raw_files:
+                parts = filename.replace(".mp4", "").split("_")
+                if len(parts) >= 4:
+                    vid_id = parts[-1]
+                    memory_agent.add_duplicate_hash(vid_id)
+            logger.info("Successfully recorded run metrics to memory.")
+        except Exception as me:
+            logger.warning(f"Memory update failed: {me}")
             
         # Send Discord Notification Report
         discord_webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
