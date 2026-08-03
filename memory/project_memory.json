@@ -15,6 +15,14 @@
       "output_file": "high_jump_fails_ranking_shorts.mp4",
       "size_mb": 16.9,
       "url": null
+    },
+    {
+      "timestamp": "2026-08-03T08:18:51.277799",
+      "topic": "High Jump Fails",
+      "style": "funny",
+      "output_file": "high_jump_fails_ranking_shorts.mp4",
+      "size_mb": 16.9,
+      "url": "https://drive.google.com/file/d/1sQFs1pkIS-Y_3Roz-UJApF-P4Ec5kRx9/view?usp=drivesdk"
     }
   ],
   "style_library": {
@@ -22,7 +30,7 @@
       "name": "Funny Zoom",
       "views": 0,
       "priority": "High",
-      "success_count": 1
+      "success_count": 2
     },
     "sports": {
       "name": "Sports Cinematic",
