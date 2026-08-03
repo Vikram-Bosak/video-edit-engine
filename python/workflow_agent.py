@@ -543,7 +543,7 @@ def edit_moment_segment(
             f"[1:a]volume=0.18[bgm_a];" # BGM at 18% Volume
             f"[2:a]adelay={delay_ms}|{delay_ms},volume=0.70[impact_a];" # SFX at 70% Volume with 0.1s early sync
             f"[3:a]volume=1.00[orig_a];" # Original Dialogue / Gameplay audio at 100% Volume
-            "[orig_a][bgm_a][impact_a]amix=inputs=3:duration=first[out_a]",
+            "[orig_a][bgm_a][impact_a]amix=inputs=3:duration=first:normalize=0[out_a]",
             "-map", "0:v",
             "-map", "[out_a]",
             "-c:v", "libx264", "-pix_fmt", "yuv420p",
@@ -566,7 +566,7 @@ def edit_moment_segment(
         "-filter_complex",
         f"[1:a]volume=0.18[bgm_a];"
         f"[2:a]adelay={delay_ms}|{delay_ms},volume=0.70[impact_a];"
-        "[bgm_a][impact_a]amix=inputs=2:duration=first[out_a]",
+        "[bgm_a][impact_a]amix=inputs=2:duration=first:normalize=0[out_a]",
         "-map", "0:v",
         "-map", "[out_a]",
         "-c:v", "libx264", "-pix_fmt", "yuv420p",

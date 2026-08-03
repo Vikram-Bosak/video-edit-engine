@@ -72,7 +72,7 @@ class SoundEffectsAgent:
             cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=180:duration=0.3", "-af", "asetrate=44100*1.5,atempo=1/1.5,volume=1.5", output_path]
         elif category in ("hit", "thud"):
             # Mix a low sine frequency with a brown noise burst for a realistic drum kick/thud sound
-            cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "anoisesrc=d=0.2:c=brown", "-f", "lavfi", "-i", "sine=f=75:d=0.2", "-filter_complex", "[0:a]volume=1.5,lowpass=f=120[a0];[1:a]volume=1.8,afade=t=out:st=0.1:d=0.1[a1];[a0][a1]amix=inputs=2:duration=first", output_path]
+            cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "anoisesrc=d=0.2:c=brown", "-f", "lavfi", "-i", "sine=f=75:d=0.2", "-filter_complex", "[0:a]volume=1.5,lowpass=f=120[a0];[1:a]volume=1.8,afade=t=out:st=0.1:d=0.1[a1];[a0][a1]amix=inputs=2:duration=first:normalize=0", output_path]
         elif category == "explosion":
             cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "anoisesrc=d=0.6:c=brown", "-af", "volume=2.0,lowpass=f=150,afade=t=out:st=0.3:d=0.3", output_path]
         elif category == "whoosh":
@@ -334,7 +334,7 @@ class SoundEffectsAgent:
             
         # Mix all sfx tracks + original video track (0:a)
         sfx_outputs = "".join(f"[sfx_a{idx}]" for idx in range(len(sfx_mappings)))
-        filter_parts.append(f"[0:a]{sfx_outputs}amix=inputs={len(sfx_mappings)+1}:duration=first[out_a]")
+        filter_parts.append(f"[0:a]{sfx_outputs}amix=inputs={len(sfx_mappings)+1}:duration=first:normalize=0[out_a]")
         
         cmd.extend([
             "-filter_complex", ";".join(filter_parts),
