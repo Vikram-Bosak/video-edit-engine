@@ -7,6 +7,14 @@
       "output_file": "gym_ranking_shorts.mp4",
       "size_mb": 0.0,
       "url": "https://drive.google.com/file/d/mock123"
+    },
+    {
+      "timestamp": "2026-08-03T08:00:49.931973",
+      "topic": "High Jump Fails",
+      "style": "funny",
+      "output_file": "high_jump_fails_ranking_shorts.mp4",
+      "size_mb": 16.9,
+      "url": null
     }
   ],
   "style_library": {
@@ -14,7 +22,7 @@
       "name": "Funny Zoom",
       "views": 0,
       "priority": "High",
-      "success_count": 0
+      "success_count": 1
     },
     "sports": {
       "name": "Sports Cinematic",
@@ -37,7 +45,15 @@
     }
   },
   "duplicate_hashes": [
-    "vid_mock_999"
+    "vid_mock_999",
+    "V8FPon3cQj0",
+    "aYq5n9UEZjM",
+    "3Chjj9KtpvU",
+    "-vznWqIxFsk",
+    "jrI5FIAIqw",
+    "0uRV7yLaiVQ",
+    "EmWddb6GR-o",
+    "nCmtPwKI4rQ"
   ],
   "settings": {
     "default_transition": "tv_static",
