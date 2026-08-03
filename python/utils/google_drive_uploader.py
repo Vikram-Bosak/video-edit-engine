@@ -65,7 +65,7 @@ class GoogleDriveUploader:
         from google.auth.transport.requests import Request
         from googleapiclient.discovery import build
 
-        SCOPES = ["https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
+        SCOPES = ["https://www.googleapis.com/auth/drive"]
         creds = None
         repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         token_path = os.path.join(repo_root, "token.json")
